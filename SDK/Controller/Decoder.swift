@@ -14,7 +14,7 @@ public class TagValidateMessage {
     public var byteArray:Data
     
     
-    public init(byteArray:Data ) {
+    public init(of byteArray:Data ) {
         
         self.byteArray = byteArray
         print ("byte array: \(byteArray)")
@@ -51,7 +51,7 @@ public class TagPositionResponse {
     public var covYy = Double()
     public var siteID = String()
     
-    public init (byteArray: Data) {
+    public init (of byteArray: Data) {
         
         
         self.byteArray = byteArray

@@ -32,8 +32,8 @@
             // Set State
             recievingData = true
             
-            let validatedMessage = TagValidateMessage(byteArray: data).byteArray
-            let localPosition = TagPositionResponse(byteArray: validatedMessage)
+            let validatedMessage = TagValidateMessage(of: data).byteArray
+            let localPosition = TagPositionResponse(of: validatedMessage)
             
             let xPos = localPosition.xCoord
             let yPos = localPosition.yCoord
@@ -47,19 +47,13 @@
     }
 
 ```
+## TagValidateMessage(of:Data)
+
+Validate the completeness of the message by checking the Start- and End-byte and remove them from the array.
+
+## TagPositionResponse
+
+Checks the validated array for the Position-Command-Byte and extracts the local position values in dm (?) vom it.
 
 
 
-
-# Get ByteArray from UART-Message
-```
-let byteArray = decoder.getByteArray(from: data)
-```
-
-# Get Tracelet Position
-
-```
-let xPos = decoder.getTraceletPosition(from: byteArray).0
-let yPos = decoder.getTraceletPosition(from: byteArray).1
-let zPos = decoder.getTraceletPosition(from: byteArray).2
-```
