@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D1F63A9529C0941300FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9429C0941300FC1A06 /* README.md */; };
+		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
 		D1FE236F29C06E6B002F1049 /* SDK.h in Headers */ = {isa = PBXBuildFile; fileRef = D1FE236C29C06E6B002F1049 /* SDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D1FE237829C06E8E002F1049 /* ProtocolConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FE237529C06E8E002F1049 /* ProtocolConstants.swift */; };
@@ -17,7 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		D1F63A9429C0941300FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = "../../ios-tracelet-reader/README.md"; sourceTree = "<group>"; };
+		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1FE236C29C06E6B002F1049 /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
 		D1FE236D29C06E6B002F1049 /* SDK.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = SDK.docc; sourceTree = "<group>"; };
@@ -41,6 +41,7 @@
 		D1FE235F29C06E6B002F1049 = {
 			isa = PBXGroup;
 			children = (
+				D1F63A9629C0B21D00FC1A06 /* README.md */,
 				D1FE236B29C06E6B002F1049 /* SDK */,
 				D1FE236A29C06E6B002F1049 /* Products */,
 			);
@@ -57,7 +58,6 @@
 		D1FE236B29C06E6B002F1049 /* SDK */ = {
 			isa = PBXGroup;
 			children = (
-				D1F63A9429C0941300FC1A06 /* README.md */,
 				D1FE237E29C06EB8002F1049 /* Controller */,
 				D1FE237B29C06E95002F1049 /* Model */,
 				D1FE236C29C06E6B002F1049 /* SDK.h */,
@@ -153,7 +153,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1F63A9529C0941300FC1A06 /* README.md in Resources */,
+				D1F63A9729C0B21D00FC1A06 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
