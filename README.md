@@ -18,33 +18,44 @@
 
 # Get Position data via Bluetooth connection to tracelet
 
-```
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
-                
-        guard let data = characteristic.value else {
-            // no data transmitted, handle if needed
-            print("no data")
-            return
-        }
+## Instantiate Decoder()
 
-        // Get TX  value
-        if characteristic.uuid == UUIDs.traceletTxChar {
-            // Set State
-            recievingData = true
-            
-            let validatedMessage = TagValidateMessage(of: data).byteArray
-            let localPosition = TagPositionResponse(of: validatedMessage)
-            
-            let xPos = localPosition.xCoord
-            let yPos = localPosition.yCoord
-            let zPos = localPosition.zCoord
-            let covXx = localPosition.covXx
-            let covXy = localPosition.covXy
-            let covYy = localPosition.covYy
-            let siteId = localPosition.siteID   
- 
-        }
-    }
+```
+let decoder = Decoder()
+
+```
+      func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
+         
+         
+         guard let data = characteristic.value else {
+             // no data transmitted, handle if needed
+             print("no data")
+             return
+         }
+         
+         // Get TX  value
+         if characteristic.uuid == UUIDs.traceletTxChar {
+             // Set State
+             recievingData = true
+             
+             do {
+                 let validatedMessage = try decoder.ValidateMessage(of: data)
+                 let localPosition = try TagPositionResponse(of: validatedMessage)
+                 
+                 let xPos = localPosition.xCoord
+                 let yPos = localPosition.yCoord
+                 let zPos = localPosition.zCoord
+                 let covXx = localPosition.covXx
+                 let covXy = localPosition.covXy
+                 let covYy = localPosition.covYy
+                 let siteId = localPosition.siteID
+                 
+                 
+             }catch{
+                 print (error)
+             }
+         }
+     }
 
 ```
 ## TagValidateMessage(of:Data)
