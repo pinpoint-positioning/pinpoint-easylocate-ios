@@ -28,29 +28,31 @@ public struct ProtocolConstants {
 
 
 
-//        Byte0: 7F // START_BYTE
-//        Byte1: 97 // cmdByte -> 97 Position
-//        Byte2: 55
-//        Byte3: 00
-//        Byte4: 1D
-//        Byte5: 00
-//        Byte6: 0A
-//        Byte7: 00
-//        Byte8: 00
-//        Byte9: 00
-//        Byte10: 00
-//        Byte11: 00
-//        Byte12: 00
-//        Byte13: 00
-//        Byte14: 00
-//        Byte15: 00
-//        Byte16: 00
-//        Byte17: 00
-//        Byte18: 00
-//        Byte19: 00
-//        Byte20: 7E
-//        Byte21: 51
-//        Byte22: FD
+
+
+//        Byte0: 7F    // START_BYTE
+//        Byte1: 97    // cmdByte -> 97 Position
+//        Byte2: 55    // PosX 1
+//        Byte3: 00    // PosX 2
+//        Byte4: 1D    // PosY 1
+//        Byte5: 00    // PosY 2
+//        Byte6: 0A    // PosZ 1
+//        Byte7: 00    // PosZ 1
+//        Byte8: 00    // PosZ 2
+//        Byte9: 00    // CovXx 1
+//        Byte10: 00   // CovXx 2
+//        Byte11: 00   // CovXx 3
+//        Byte12: 00   // CovXx 4
+//        Byte13: 00   // CovXy 1
+//        Byte14: 00   // CovXy 2
+//        Byte15: 00   // CovXy 3
+//        Byte16: 00   // CovXy 4
+//        Byte17: 00   // CovYy 1
+//        Byte18: 00   // CovYy 2
+//        Byte19: 00   // CovYy 3
+//        Byte20: 7E   // CovYy 4
+//        Byte21: 51   // siteID 1
+//        Byte22: FD   // siteID 2
 //        Byte23: BB
 //        Byte24: 01
 //        Byte25: B2
