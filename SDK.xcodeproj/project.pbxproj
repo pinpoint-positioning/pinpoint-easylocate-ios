@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614329C1F9A700901DC5 /* Encoder.swift */; };
 		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
 		D1FE236F29C06E6B002F1049 /* SDK.h in Headers */ = {isa = PBXBuildFile; fileRef = D1FE236C29C06E6B002F1049 /* SDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D18B614329C1F9A700901DC5 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
 		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1FE236C29C06E6B002F1049 /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				D1FE237C29C06EB0002F1049 /* Decoder.swift */,
+				D18B614329C1F9A700901DC5 /* Encoder.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -123,6 +126,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 1420;
 				TargetAttributes = {
 					D1FE236829C06E6B002F1049 = {
@@ -166,6 +170,7 @@
 			files = (
 				D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */,
 				D1FE237929C06E8E002F1049 /* Strings.swift in Sources */,
+				D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */,
 				D1FE237A29C06E8E002F1049 /* UUUIDs.swift in Sources */,
 				D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */,
 				D1FE237829C06E8E002F1049 /* ProtocolConstants.swift in Sources */,
