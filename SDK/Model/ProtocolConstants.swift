@@ -23,6 +23,8 @@ public struct ProtocolConstants {
     
     /// cmcCode: Position
     public static let cmdCodePosition = 0x97
+    
+    public static let cmdCodeShowMe:UInt8 = 0x19
     }
 
 
