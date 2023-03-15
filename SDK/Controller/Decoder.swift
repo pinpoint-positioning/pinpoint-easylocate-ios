@@ -99,8 +99,7 @@ public class TagPositionResponse {
             throw RuntimeError.validationError("Message is not a position")
         }
         // Position Byte-Ranges
-        
-        
+
         let xPosRange = Array(byteArray[1...2])         // 2 Byte
         let yPosRange = Array(byteArray[3...4])         // 2 Byte
         let zPosRange = Array(byteArray[5...6])         // 2 Byte
@@ -111,6 +110,7 @@ public class TagPositionResponse {
         let  signatureRange = Array(byteArray[21...28])       // 8 Byte
         
         // Get Raw bytes from ByteRanges and convert to dm in Double
+        
         xCoord = xPosRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return Double (rawPtr.load(as: Int16.self)) / 10.0 })
@@ -135,6 +135,7 @@ public class TagPositionResponse {
         
         // Check if correct
         // Signature is available in tracelet?
+        
         if (byteArray.count > 21) {
             signature = signatureRange.withUnsafeBytes({
                 (rawPtr: UnsafeRawBufferPointer) in

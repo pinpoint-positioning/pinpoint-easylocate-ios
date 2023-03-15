@@ -27,4 +27,5 @@ public struct SFSymbols {
     public static let CHECKMARK = "checkmark.circle.fill"
     public static let XMARK = "xmark.circle"
     public static let CHECKMARK_NOT_FILLED = "checkmark.circle"
+    public static let CIRCLE_FILLED = "circle.fill"
 }
