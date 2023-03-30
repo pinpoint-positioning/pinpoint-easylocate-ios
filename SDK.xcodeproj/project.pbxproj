@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614329C1F9A700901DC5 /* Encoder.swift */; };
+		D18B614829C3425D00901DC5 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614729C3425D00901DC5 /* Commands.swift */; };
+		D18B614A29C343A600901DC5 /* States.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614929C343A600901DC5 /* States.swift */; };
+		D18B615329C4584000901DC5 /* SDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1FE236929C06E6B002F1049 /* SDK.framework */; };
+		D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615929C4589D00901DC5 /* Encoding.swift */; };
+		D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615B29C85CA200901DC5 /* TraceletResponses.swift */; };
+		D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615D29C85CFB00901DC5 /* DataModels.swift */; };
 		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
 		D1FE236F29C06E6B002F1049 /* SDK.h in Headers */ = {isa = PBXBuildFile; fileRef = D1FE236C29C06E6B002F1049 /* SDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -17,8 +23,24 @@
 		D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1FE237C29C06EB0002F1049 /* Decoder.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D18B615429C4584000901DC5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1FE236029C06E6B002F1049 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1FE236829C06E6B002F1049;
+			remoteInfo = SDK;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		D18B614329C1F9A700901DC5 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
+		D18B614729C3425D00901DC5 /* Commands.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Commands.swift; path = ../../../../.Trash/Commands.swift; sourceTree = "<group>"; };
+		D18B614929C343A600901DC5 /* States.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = States.swift; sourceTree = "<group>"; };
+		D18B614F29C4584000901DC5 /* SDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D18B615929C4589D00901DC5 /* Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoding.swift; sourceTree = "<group>"; };
+		D18B615B29C85CA200901DC5 /* TraceletResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraceletResponses.swift; sourceTree = "<group>"; };
+		D18B615D29C85CFB00901DC5 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
 		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1FE236C29C06E6B002F1049 /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
@@ -30,6 +52,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D18B614C29C4584000901DC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D18B615329C4584000901DC5 /* SDK.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D1FE236629C06E6B002F1049 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -40,11 +70,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D18B615029C4584000901DC5 /* SDKTests */ = {
+			isa = PBXGroup;
+			children = (
+				D18B615929C4589D00901DC5 /* Encoding.swift */,
+			);
+			path = SDKTests;
+			sourceTree = "<group>";
+		};
 		D1FE235F29C06E6B002F1049 = {
 			isa = PBXGroup;
 			children = (
 				D1F63A9629C0B21D00FC1A06 /* README.md */,
 				D1FE236B29C06E6B002F1049 /* SDK */,
+				D18B615029C4584000901DC5 /* SDKTests */,
 				D1FE236A29C06E6B002F1049 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				D1FE236929C06E6B002F1049 /* SDK.framework */,
+				D18B614F29C4584000901DC5 /* SDKTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -72,8 +112,10 @@
 			isa = PBXGroup;
 			children = (
 				D1FE237529C06E8E002F1049 /* ProtocolConstants.swift */,
+				D18B615D29C85CFB00901DC5 /* DataModels.swift */,
 				D1FE237629C06E8E002F1049 /* Strings.swift */,
 				D1FE237729C06E8E002F1049 /* UUUIDs.swift */,
+				D18B614929C343A600901DC5 /* States.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -83,6 +125,8 @@
 			children = (
 				D1FE237C29C06EB0002F1049 /* Decoder.swift */,
 				D18B614329C1F9A700901DC5 /* Encoder.swift */,
+				D18B614729C3425D00901DC5 /* Commands.swift */,
+				D18B615B29C85CA200901DC5 /* TraceletResponses.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -101,6 +145,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		D18B614E29C4584000901DC5 /* SDKTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D18B615629C4584000901DC5 /* Build configuration list for PBXNativeTarget "SDKTests" */;
+			buildPhases = (
+				D18B614B29C4584000901DC5 /* Sources */,
+				D18B614C29C4584000901DC5 /* Frameworks */,
+				D18B614D29C4584000901DC5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D18B615529C4584000901DC5 /* PBXTargetDependency */,
+			);
+			name = SDKTests;
+			productName = SDKTests;
+			productReference = D18B614F29C4584000901DC5 /* SDKTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		D1FE236829C06E6B002F1049 /* SDK */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D1FE237229C06E6B002F1049 /* Build configuration list for PBXNativeTarget "SDK" */;
@@ -129,6 +191,9 @@
 				LastSwiftUpdateCheck = 1420;
 				LastUpgradeCheck = 1420;
 				TargetAttributes = {
+					D18B614E29C4584000901DC5 = {
+						CreatedOnToolsVersion = 14.2;
+					};
 					D1FE236829C06E6B002F1049 = {
 						CreatedOnToolsVersion = 14.2;
 					};
@@ -148,11 +213,19 @@
 			projectRoot = "";
 			targets = (
 				D1FE236829C06E6B002F1049 /* SDK */,
+				D18B614E29C4584000901DC5 /* SDKTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D18B614D29C4584000901DC5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D1FE236729C06E6B002F1049 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -164,6 +237,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D18B614B29C4584000901DC5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D1FE236529C06E6B002F1049 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -171,7 +252,11 @@
 				D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */,
 				D1FE237929C06E8E002F1049 /* Strings.swift in Sources */,
 				D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */,
+				D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */,
+				D18B614A29C343A600901DC5 /* States.swift in Sources */,
 				D1FE237A29C06E8E002F1049 /* UUUIDs.swift in Sources */,
+				D18B614829C3425D00901DC5 /* Commands.swift in Sources */,
+				D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */,
 				D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */,
 				D1FE237829C06E8E002F1049 /* ProtocolConstants.swift in Sources */,
 			);
@@ -179,7 +264,49 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D18B615529C4584000901DC5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1FE236829C06E6B002F1049 /* SDK */;
+			targetProxy = D18B615429C4584000901DC5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D18B615729C4584000901DC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N9N8SDH8C6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.scherbeck.ppsdk.SDKTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D18B615829C4584000901DC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N9N8SDH8C6;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tech.scherbeck.ppsdk.SDKTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		D1FE237029C06E6B002F1049 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -363,6 +490,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D18B615629C4584000901DC5 /* Build configuration list for PBXNativeTarget "SDKTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D18B615729C4584000901DC5 /* Debug */,
+				D18B615829C4584000901DC5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D1FE236329C06E6B002F1049 /* Build configuration list for PBXProject "SDK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
