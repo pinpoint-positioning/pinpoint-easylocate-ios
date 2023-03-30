@@ -16,7 +16,7 @@
 # ProtocolConstants
 - All neccessary protocol commands are store in `ProtocolConstants.swift`.
 
-# Get Position data via Bluetooth connection to tracelet
+# Get Position data from connected tracelet
 
 ## Instantiate Decoder()
 
@@ -24,38 +24,25 @@
 let decoder = Decoder()
 
 ```
-      func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
-         
-         
-         guard let data = characteristic.value else {
-             // no data transmitted, handle if needed
-             print("no data")
-             return
-         }
-         
-         // Get TX  value
-         if characteristic.uuid == UUIDs.traceletTxChar {
-             // Set State
-             recievingData = true
-             
-             do {
-                 let validatedMessage = try decoder.ValidateMessage(of: data)
-                 let localPosition = try TagPositionResponse(of: validatedMessage)
-                 
-                 let xPos = localPosition.xCoord
-                 let yPos = localPosition.yCoord
-                 let zPos = localPosition.zCoord
-                 let covXx = localPosition.covXx
-                 let covXy = localPosition.covXy
-                 let covYy = localPosition.covYy
-                 let siteId = localPosition.siteID
-                 
-                 
-             }catch{
-                 print (error)
-             }
-         }
-     }
+do {
+
+    let localPosition = try TagPositionResponse(of: data)
+
+    / Example - Get dosition data
+    let xPos = localPosition.xCoord
+    let yPos = localPosition.yCoord
+    let zPos = localPosition.zCoord
+    let covXx = localPosition.covXx
+    let covXy = localPosition.covXy
+    let covYy = localPosition.covYy
+    let siteId = localPosition.siteID
+    let signature = localPosition.signature
+
+
+    }catch{
+
+        print(error)
+    }
 
 ```
 ## TagValidateMessage(of:Data)
@@ -68,3 +55,11 @@ Checks the validated array for the Position-Command-Byte and extracts the local 
 
 
 
+
+Left at:
+
+Misaligned Pointer error in Status Decoder
+Parsing of Status Data
+chaging moving pointer to byteRange
+Should the stream of data be automatically identifed for the message type? (Classifier)
+Buffer with all messages or register listener event

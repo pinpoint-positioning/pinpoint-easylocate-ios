@@ -10,21 +10,29 @@ import Foundation
 public struct ProtocolConstants {
     
       /// Protocol start byte
-    public static let startByte = 0x7F
+    public static let startByte:UInt8 = 0x7F
 
       /// Protocol stop byte
-    public static let stopByte = 0x8F
+    public static let stopByte:UInt8 = 0x8F
 
       /// Protocol escape byte
-    public static let  escapeByte = 0x1B
+    public static let  escapeByte:UInt8 = 0x1B
 
       /// Protocol xor byte
-    public static let  xorByte = 0x20
+    public static let  xorByte:UInt8 = 0x20
     
-    /// cmcCode: Position
-    public static let cmdCodePosition = 0x97
-    
+
+    // Commands
     public static let cmdCodeShowMe:UInt8 = 0x19
+    public static let cmdCodeGetStatus:UInt8 = 0x12
+    public static let cmdCodeGetVersion:UInt8 = 0x14
+    
+    
+    
+    // Message Indicators
+    public static let cmdCodePosition:UInt8 = 0x97
+    public static let cmdCodeStatus:UInt8 =  0x92
+    public static let cmdCodeVersion:UInt8 = 0x94
     }
 
 
