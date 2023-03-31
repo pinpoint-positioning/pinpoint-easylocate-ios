@@ -174,6 +174,8 @@ public class TraceletResponse {
         
     }
     
+
+    
     
     
     
@@ -193,7 +195,7 @@ public class TraceletResponse {
         }
         
         
-        return "Failure getting version"
+        return "get version"
     }
     
     
@@ -205,6 +207,7 @@ public class TraceletResponse {
 public protocol Response {
     var postion:TL_PositionResponse { get }
     var status: TL_StatusResponse { get }
+    var version: TL_VersionResponse { get }
     // and whatever else is common to these classes
 }
 

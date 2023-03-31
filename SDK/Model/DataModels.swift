@@ -45,6 +45,12 @@ public struct TL_StatusResponse {
 
 }
 
+public struct TL_VersionResponse {
+    
+    public var version = String()
+}
+
+
 public struct BufferElement
 
 {
