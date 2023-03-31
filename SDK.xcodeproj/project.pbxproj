@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D119BC7F29D71FBC00E0BEF8 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D119BC7E29D71FBC00E0BEF8 /* Commands.swift */; };
 		D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614329C1F9A700901DC5 /* Encoder.swift */; };
-		D18B614829C3425D00901DC5 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614729C3425D00901DC5 /* Commands.swift */; };
 		D18B614A29C343A600901DC5 /* States.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614929C343A600901DC5 /* States.swift */; };
 		D18B615329C4584000901DC5 /* SDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1FE236929C06E6B002F1049 /* SDK.framework */; };
 		D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615929C4589D00901DC5 /* Encoding.swift */; };
@@ -34,8 +34,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D119BC7E29D71FBC00E0BEF8 /* Commands.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
 		D18B614329C1F9A700901DC5 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
-		D18B614729C3425D00901DC5 /* Commands.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Commands.swift; path = ../../../../.Trash/Commands.swift; sourceTree = "<group>"; };
 		D18B614929C343A600901DC5 /* States.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = States.swift; sourceTree = "<group>"; };
 		D18B614F29C4584000901DC5 /* SDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D18B615929C4589D00901DC5 /* Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoding.swift; sourceTree = "<group>"; };
@@ -125,7 +125,7 @@
 			children = (
 				D1FE237C29C06EB0002F1049 /* Decoder.swift */,
 				D18B614329C1F9A700901DC5 /* Encoder.swift */,
-				D18B614729C3425D00901DC5 /* Commands.swift */,
+				D119BC7E29D71FBC00E0BEF8 /* Commands.swift */,
 				D18B615B29C85CA200901DC5 /* TraceletResponses.swift */,
 			);
 			path = Controller;
@@ -252,10 +252,10 @@
 				D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */,
 				D1FE237929C06E8E002F1049 /* Strings.swift in Sources */,
 				D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */,
+				D119BC7F29D71FBC00E0BEF8 /* Commands.swift in Sources */,
 				D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */,
 				D18B614A29C343A600901DC5 /* States.swift in Sources */,
 				D1FE237A29C06E8E002F1049 /* UUUIDs.swift in Sources */,
-				D18B614829C3425D00901DC5 /* Commands.swift in Sources */,
 				D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */,
 				D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */,
 				D1FE237829C06E8E002F1049 /* ProtocolConstants.swift in Sources */,
