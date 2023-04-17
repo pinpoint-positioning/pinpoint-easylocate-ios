@@ -9,43 +9,57 @@ import Foundation
 import CoreBluetooth
 
 
-public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
+
+// ToDo:
+
+// 1. Scan() should return a list of devices
+// Send StopPos after connect
+
+// 2. States with Rebecca
+// 3. Buffer logic is not good. (Messages are lost)
+// 4. Clarify method usage
+// 5. How to return API-Object, when connected?
+// Exceptions?
+// Logging
+
+// Rebecca Buffer
+// Local position
+
+
+
+public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     
     
     
     // Properties
-    @Published public var textOutput = String()
+    @Published public var allResponses = String()
     
-    //States -- Really false in init?
-    @Published public var isConnected = false
-    @Published public var isScanning = false
-    @Published public var powerOn = false
+    // Published vars
+    // ### Debug only ###
     @Published public var traceletInRange = false
-    @Published public var serviceFound = false
-    @Published public var recievingData = false
     @Published public var deviceName = ""
-    @Published public var subscribedToNotifiy = false
+    public var positionLog = String()
+    /// ### Debug End ###
+    
+    @Published public var generalState:STATE = .DISCONNECTED
+    @Published public var scanState:STATE = .IDLE
+    @Published public var comState:STATE = .IDLE
     @Published public var bleState = BLE_State.UNKNOWN
+    
     @Published public var localPosition = TL_PositionResponse()
     @Published public var status = TL_StatusResponse()
-    public var positionLog = String()
+    @Published public var version = TL_VersionResponse()
+    @Published public var discoveredTracelets = [CBPeripheral]()
+    @Published public var connectedTracelet: CBPeripheral?
     
     // Buffer
     public var messageBuffer = [BufferElement]()
     
     var centralManager: CBCentralManager!
-    var peripheral: CBPeripheral!
-    var connectedTracelet: CBPeripheral? = nil
+    
     let decoder = Decoder()
-    var rxCharacteristic: CBCharacteristic? = nil
-    var isRequestingStatus = false
-    
-    // Variables for Scan-Timeout-Timer
-    var timer: Timer?
-    var runCount = 0
-    var timeout = 30
-    @Published public var remainingTimer = 0
-    
+    var rxCharacteristic: CBCharacteristic?
+      
     
     public override init() {
         super.init()
@@ -58,133 +72,181 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     
     
     // MARK: - Scan()
-    // TBD -> Return list of devices
-    public func scan()
+    // TBD -> Return list of compatible devices
+    public func scan(timeout: Double)
     {
+        guard generalState == STATE.DISCONNECTED else {
+            
+            print ("Can only start scan from DISCONNECTED")
+            return
+        }
+        discoveredTracelets = []
+      
         // Set State
-        bleState = BLE_State.INIT
-        isScanning = true
+        changeScanState(changeTo: .SCANNING)
+        
         //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
-        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: true)]
+        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: false)]
         
         //Initiate BT Scan
         centralManager.scanForPeripherals(withServices: nil, options: options)
         
-        
-        //Start Timer
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(fireTimer), userInfo: nil, repeats: true)
-        
+        // Stop scan after timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {            
+            self.stopScan()
+        }
     }
     
+    func getCharacteristicsForDiscoveredTracelets(tracelets:[CBPeripheral]) {
+        for device in tracelets {
+            device.discoverServices([UUIDs.traceletNordicUARTService])
+        }
+    }
     
     
     // MARK: - StopScan()
     
     public func stopScan() {
-        
         centralManager.stopScan()
-        isScanning = false
+        changeScanState(changeTo: .IDLE)
     }
     
     // MARK: - Connect()
     
-    public func connect() {
+    public func connect(device: CBPeripheral) {
         
-        // Make sure the device the should be connected is the identified tracelet
-        if let foundTracelet = connectedTracelet{
-            centralManager.connect(foundTracelet, options: nil)
+        guard generalState != STATE.CONNECTED else {
+            print ("already connected")
+            return
         }
+        centralManager.connect(device, options: nil)
     }
     
     // MARK: - Disconnect()
     
     public func disconnect() {
-        centralManager.cancelPeripheralConnection(connectedTracelet!)
-        peripheral = nil
+        if let tracelet = connectedTracelet {
+            centralManager.cancelPeripheralConnection(tracelet)
+        }
         
-        
-        
-        
-    }
-    
-    enum CommError: Error
-    {
-        case sendError
+        connectedTracelet = nil
     }
     
     
     // MARK: - Send()
     // Send write command to BT device
-    // TBD -> Only possible when connected
-    public func send(data: Data) {
-        
+    public func send(to tracelet: CBPeripheral, data: Data) {
         
         if let rxCharacteristic = rxCharacteristic {
-            connectedTracelet!.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
+            tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
         }
     }
     
+    
+    
+    
+    public func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
+        guard generalState == STATE.CONNECTED else {
+            print ("State must be CONNECTED to send command")
+            return
+        }
+        
+        if let rxCharacteristic = rxCharacteristic {
+            tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withResponse)
+            
+        }
+    }
+     
     
     
     // MARK: - ShowMe()
     
-    public func showMe() {
-        
-        if let rxCharacteristic = rxCharacteristic {
-            let cmdShowMe = Encoder.encodeByte(ProtocolConstants.cmdCodeShowMe)
-            connectedTracelet!.writeValue(cmdShowMe as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
-        }
+    public func showMe(tracelet: CBPeripheral) {
+        let cmdByte = ProtocolConstants.cmdCodeShowMe
+        let data = Encoder.encodeByte(cmdByte)
+        send(to: tracelet, data: data)
     }
+    
     // MARK: - startPositioning()
     
     public func startPositioning() {
         
-        if let rxCharacteristic = rxCharacteristic {
-            let cmdShowMe = Encoder.encodeByte(ProtocolConstants.cmdCodeStartPositioning)
-            connectedTracelet!.writeValue(cmdShowMe as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
+        let cmdByte = ProtocolConstants.cmdCodeStartPositioning
+        let data = Encoder.encodeByte(cmdByte)
+        if let tracelet = connectedTracelet {
+            send(to: tracelet, data: data)
         }
+        
     }
     
     // MARK: - stopPositioning()
     
     public func stopPositioning() {
         
-        if let rxCharacteristic = rxCharacteristic {
-            let cmdShowMe = Encoder.encodeByte(ProtocolConstants.cmdCodeStopPositioning)
-            connectedTracelet!.writeValue(cmdShowMe as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
+        let cmdByte = ProtocolConstants.cmdCodeStopPositioning
+        let data = Encoder.encodeByte(cmdByte)
+        
+        if let tracelet = connectedTracelet {
+            send(to: tracelet, data: data)
+        }
+    }
+    
+    
+    
+    func changeGeneralState(changeTo:STATE) {
+        DispatchQueue.main.async {
+            self.generalState = changeTo
+        }
+    }
+    
+    func changeComState(changeTo:STATE) {
+        DispatchQueue.main.async {
+            self.comState = changeTo
+        }
+    }
+    
+    
+    func changeScanState(changeTo:STATE) {
+        DispatchQueue.main.async {
+            self.scanState = changeTo
         }
     }
     
     // MARK: - getStatus()
     
-    public func getStatus(completion: @escaping ((TL_StatusResponse) -> Void)) {
-
+    public func requestStatus(completion: @escaping ((TL_StatusResponse) -> Void)) {
+        
         let cmdByte = ProtocolConstants.cmdCodeGetStatus
         let data = Encoder.encodeByte(cmdByte)
-        send(data: data)
         
-
-        freezeBuffer { buffer in
-            for message in buffer {
-                print(self.getCmdByte(from: message.message))
-                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
-                    completion(TraceletResponse().GetStatusResponse(from: message.message))
-                    // If there are two status messages in the buffer, only the first will be returned.
-                    // Not sure if this is fine
-                    print("found status:  \(TraceletResponse().GetStatusResponse(from: message.message))")
-                    self.messageBuffer.removeAll()
-                }
-            }
+        if let tracelet = connectedTracelet {
+            sendWithResponse(to: tracelet, data: data)
         }
+        
+        
+        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+        
+        //        freezeBuffer { buffer in
+        //            for message in buffer {
+        //                print(self.getCmdByte(from: message.message))
+        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
+        //                    completion(TraceletResponse().GetStatusResponse(from: message.message))
+        //                    // If there are two status messages in the buffer, only the first will be returned.
+        //                    // Not sure if this is fine
+        //                    print("found status:  \(TraceletResponse().GetStatusResponse(from: message.message))")
+        //                    self.messageBuffer.removeAll()
+        //                }
+        //            }
+        //        }
     }
     
-
- 
+    
+    
     // MARK: - getStatusString()
     
     public func getStatusString(completion: @escaping ((String) -> Void)) {
-
-        getStatus { status in
+        
+        requestStatus { status in
             let statusString =  """
                                 SiteID: \(status.siteIDe)\n \
                                 Battery Level: \(status.batteryLevel)\n \
@@ -202,9 +264,7 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     public func getLocalPosition(data:Data) -> TL_PositionResponse {
         
         let localPosition = TraceletResponse().GetPositionResponse(from: data)
-
-        textOutput = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) site: \(localPosition.siteID)\n\n"
-        
+        allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) site: \(localPosition.siteID)\n\n"
         return localPosition
         
     }
@@ -215,23 +275,32 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     // MARK: - getOneTimePosition()
     
     public func getOneTimePostion(completion: @escaping ((TL_PositionResponse) -> Void)) {
-
+        guard generalState == STATE.CONNECTED else {
+            print ("State must be CONNECTED to send command")
+            return
+        }
+        
         let cmdByte = ProtocolConstants.cmdCodeStartPositioning
         let data = Encoder.encodeByte(cmdByte)
-        send(data: data)
         
-        freezeBuffer { buffer in
-            for message in buffer {
-                print(self.getCmdByte(from: message.message))
-                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodePosition)  {
-                    completion(TraceletResponse().GetPositionResponse(from: message.message))
-                    // If there are two status messages in the buffer, only the first will be returned.
-                    // Not sure if this is fine
-                    print("Position found:  \(TraceletResponse().GetPositionResponse(from: message.message))")
-                    self.messageBuffer.removeAll()
-                }
-            }
+        if let tracelet = connectedTracelet {
+            sendWithResponse(to: tracelet, data: data)
         }
+        
+        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+        
+        //        freezeBuffer { buffer in
+        //            for message in buffer {
+        //                print(self.getCmdByte(from: message.message))
+        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodePosition)  {
+        //                    completion(TraceletResponse().GetPositionResponse(from: message.message))
+        //                    // If there are two status messages in the buffer, only the first will be returned.
+        //                    // Not sure if this is fine
+        //                    print("Position found:  \(TraceletResponse().GetPositionResponse(from: message.message))")
+        //                    self.messageBuffer.removeAll()
+        //                }
+        //            }
+        //        }
     }
     
     
@@ -253,28 +322,37 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     
     // MARK: - getVersion()
     
-    public func getVersion(completion: @escaping  ((String) -> Void)) {
+    public func requestVersion(completion: @escaping  ((String) -> Void)) {
+        guard generalState == STATE.CONNECTED else {
+            print ("State must be CONNECTED to send command")
+            return
+        }
         
         let cmdByte = ProtocolConstants.cmdCodeGetVersion
         let data = Encoder.encodeByte(cmdByte)
-        send(data: data)
         
-        freezeBuffer { buffer in
-            for message in buffer {
-                print(self.getCmdByte(from: message.message))
-                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
-                    completion(TraceletResponse().getVersionResponse(from: message.message))
-                    // If there are two status messages in the buffer, only the first will be returned.
-                    // Not sure if this is fine
-                    print("found status:  \(TraceletResponse().GetStatusResponse(from: message.message))")
-                    self.messageBuffer.removeAll()
-                }
-            }
+        if let tracelet = connectedTracelet {
+            sendWithResponse(to: tracelet, data: data)
         }
+        
+        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+        
+        //        freezeBuffer { buffer in
+        //            for message in buffer {
+        //                print(self.getCmdByte(from: message.message))
+        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
+        //                    completion(TraceletResponse().getVersionResponse(from: message.message))
+        //                    // If there are two status messages in the buffer, only the first will be returned.
+        //                    // Not sure if this is fine
+        //                    print("found status:  \(TraceletResponse().GetStatusResponse(from: message.message))")
+        //                    self.messageBuffer.removeAll()
+        //                }
+        //            }
+        //        }
     }
-        
-        
-
+    
+    
+    
     
     // MARK: - Buffer handling
     
@@ -322,8 +400,8 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
             print("saved: \(positionLog)")
             
         } catch {
-            textOutput = "save error"
-            // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
+            allResponses = "save error"
+            // failed to write file
         }
     }
     
@@ -339,7 +417,7 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     
     // MARK: - ClassifyResponse()
     
-    public func ClassifyResponse (from byteArray: Data) -> Response?
+    public func ClassifyResponse (from byteArray: Data)
     
     {
         let valByteArray = Decoder().ValidateMessage(of: byteArray)
@@ -347,22 +425,22 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
+            allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n\n"
             
-            
-            textOutput = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) siteID: \(localPosition.siteID) time: \(Date()) \n\n"
-            
-            // Log to File"!!!!!!
-            positionLog.append(textOutput)
-            return localPosition as? Response
+            // Debug - Log to File"!!!!!!
+            positionLog.append(allResponses)
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeStatus)
         {
             status =  TraceletResponse().GetStatusResponse(from: byteArray)
-            textOutput = "role: \(status.role) panID: \(status.panID) site: \(status.siteIDe)\n\n"
-            return status as? Response
-        } else {
-            return nil
+            allResponses = "role: \(status.role) panID: \(status.panID) site: \(status.siteIDe)\n\n"
+        }
+        
+        if (valByteArray[0] == ProtocolConstants.cmdCodeVersion)
+        {
+            version =  TraceletResponse().getVersionResponse(from: byteArray)
+            allResponses = "version: \(version.version)\n\n"
         }
         
     }
@@ -374,22 +452,7 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
         return valMesssage[0]
         
     }
-
     
-    // Scan-Timeout Timer settings
-    
-    @objc func fireTimer() {
-        runCount += 1
-        remainingTimer = timeout - runCount
-        
-        //1 Run = 1 sec.  30 runs = 30 secs
-        if (runCount == timeout || !isScanning) {
-            timer?.invalidate()
-            remainingTimer = timeout
-            stopScan()
-            if (!isScanning) {runCount = 0}
-        }
-    }
     
     
     
@@ -399,11 +462,9 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            powerOn = true
             bleState = BLE_State.BT_OK
             break
         case .poweredOff:
-            powerOn = false
             bleState = BLE_State.BT_NA
             break
         case .resetting:
@@ -428,30 +489,17 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         
         peripheral.delegate = self
-        
-        
-        
-        
-        // Needs to be improved!!
+        // Needs to be improved -> This should return a list of devices!
         // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
-        if (peripheral.name?.contains("df2b") ?? false && inProximity(RSSI) || peripheral.name?.contains("6ec6") ?? false && inProximity(RSSI))
-        {
-            
+        
+        if (peripheral.name?.contains("dwTag") ?? false) {
+            discoveredTracelets.append(peripheral)
             //Set State
             traceletInRange = true
-            bleState = BLE_State.APPROACHED
-            
-            // / If tracelet is found,save object in "peripheral"
-            connectedTracelet = peripheral
-            
-            //Stop Scan
-            centralManager.stopScan()
-            isScanning = false
-            
-            //Attempt to connect
-            connect()
+            // Discover UART Service
             
         }
+
     }
     
     
@@ -459,18 +507,16 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     // Delegate - Called when connection was successful
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        if peripheral == connectedTracelet {
+
             // Set State
-            isConnected = true
-            bleState = BLE_State.CONNECTED
-            
+            generalState = STATE.CONNECTED
+            stopScan()
             deviceName = peripheral.name ?? "unkown"
-            
+            connectedTracelet = peripheral
             // Discover UART Service
             peripheral.discoverServices([UUIDs.traceletNordicUARTService])
-            
-            
-        }
+        
+
     }
     
     
@@ -478,16 +524,13 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
-                
+
                 // Discover UART Service
                 if service.uuid == UUIDs.traceletNordicUARTService{
-                    //Set State
-                    serviceFound = true
                     
                 }
                 
                 peripheral.discoverCharacteristics([UUIDs.traceletRxChar,UUIDs.traceletTxChar], for: service)
-                
                 return
             }
         }
@@ -501,26 +544,25 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
                 
-                // Subscribe to notify of charateristic
+                // Get Characteristics and store in vars
                 if characteristic.uuid == UUIDs.traceletTxChar {
                     
                     if characteristic.properties.contains(.notify) {
                         peripheral.setNotifyValue(true, for: characteristic)
-                        subscribedToNotifiy = true
-                        bleState = BLE_State.GOT_CHARACTERISTICS
-                    }else{
-                        print("Characteristic has no notify property")
+                        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+                        print ("notify set")
                     }
                 }
                 else if characteristic.uuid == UUIDs.traceletRxChar {
                     print ("rxfound")
+                   // stopPositioning()
                     rxCharacteristic = characteristic
                 }
             }
         }
     }
     
-    
+
     
     
     // Delegate - Called when char value has updated for defined char
@@ -535,16 +577,13 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
         
         // Get TX  value
         if characteristic.uuid == UUIDs.traceletTxChar {
-            // Set State
-            recievingData = true
             
-            storeInBuffer(data: BufferElement(message: data))
-            
-            
-            // Filter Message
-            ClassifyResponse(from: data) 
-
-            
+            switch comState {
+            case .WAITING_FOR_RESPONSE:
+                ClassifyResponse(from: data)
+            default:
+                print ("unkown message")
+            }
         }
     }
     
@@ -553,20 +592,27 @@ public class Commands: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate,
     // Delegate - Called when disconnected
     // Improve: Reset all states
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        isConnected = false
+        print("diddisconnect")
+        changeGeneralState(changeTo: .DISCONNECTED)
+        
+        // #### Debug vars -> Only for testing ####
         traceletInRange = false
-        serviceFound = false
-        recievingData = false
-        subscribedToNotifiy = false
         deviceName = ""
         saveData()
+        // #### Debug vars end ####
+        
+        
+        
     }
     
     
     //Failsafe Delegate Functions
     
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        textOutput = Strings.CONNECTION_FAILED
+        allResponses = Strings.CONNECTION_FAILED
+        print("didfail")
+        changeGeneralState(changeTo: .DISCONNECTED)
+        
     }
     
 }
