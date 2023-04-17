@@ -179,7 +179,7 @@ public class TraceletResponse {
     
     
     
-    public func getVersionResponse(from byteArray: Data) -> String {
+    public func getVersionResponse(from byteArray: Data) -> TL_VersionResponse {
         
         let valByteArray = Decoder().ValidateMessage(of: byteArray)
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion) {
@@ -189,13 +189,12 @@ public class TraceletResponse {
 
                 return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian, radix: 16))"})
         
-            return version
+            return TL_VersionResponse(version: version)
         }else {
             let msg = "Received unknown response to version request with command code 0x${commandCode.toRadixString(16)}.";
+            return TL_VersionResponse()
         }
-        
-        
-        return "get version"
+
     }
     
     

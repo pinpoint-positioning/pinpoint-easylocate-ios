@@ -9,16 +9,16 @@ import Foundation
 
 public struct ProtocolConstants {
     
-      /// Protocol start byte
+    // Protocol start byte
     public static let startByte:UInt8 = 0x7F
 
-      /// Protocol stop byte
+    // Protocol stop byte
     public static let stopByte:UInt8 = 0x8F
 
-      /// Protocol escape byte
+    // Protocol escape byte
     public static let  escapeByte:UInt8 = 0x1B
 
-      /// Protocol xor byte
+    // Protocol xor byte
     public static let  xorByte:UInt8 = 0x20
     
 
