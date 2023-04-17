@@ -16,50 +16,72 @@
 # ProtocolConstants
 - All neccessary protocol commands are store in `ProtocolConstants.swift`.
 
-# Get Position data from connected tracelet
 
-## Instantiate Decoder()
+
+# Usage
+`// Import the SDK and instantiate the API`
+  
+`import SDK`
+`@EnvironmentObject var api:API`
+
+
+# Observable vars
+
+If the API-class is observed, the following variables are published:
+
+## Usage
+e.g.: `api.allResponses`, `api.status`
+
+
+* allResponses:String
+* generalState:STATE
+    - .IDLE
+    - .SCANNING
+    - .CONNECTING
+    - .CONNECTED
+    - .DISCONNECTED
+    - .WAITING_FOR_POSITION
+    - .WAITING_FOR_STATUS
+    - .WAITING_FOR_VERSION
+    - .WAITING_FOR_RESPONSE
+* scanState:STATE
+    - .IDLE
+    - .SCANNING
+* localPosition: TL_PositionResponse
+* status: TL_StatusResponse
+* version: TL_VersionResponse
+* discoveredTracelets: [CBPeripheral]
+* connectedTracelet: CBPeripheral?
+
+
+## API-Methods
+
 
 ```
-let decoder = Decoder()
+scan(timeout: Double)
+ 
+func stopScan() 
+
+connect(device: CBPeripheral)
+  
+func disconnect() 
+
+    
+showMe(tracelet: CBPeripheral) 
+
+startPositioning()     
+
+stopPositioning() 
+```
+
+
 
 ```
-do {
+requestStatus(completion: @escaping ((TL_StatusResponse) -> Void)) 
+        
+getStatusString(completion: @escaping ((String) -> Void)) 
+    
+getLocalPosition(data:Data) -> TL_PositionResponse 
 
-    let localPosition = try TagPositionResponse(of: data)
-
-    / Example - Get dosition data
-    let xPos = localPosition.xCoord
-    let yPos = localPosition.yCoord
-    let zPos = localPosition.zCoord
-    let covXx = localPosition.covXx
-    let covXy = localPosition.covXy
-    let covYy = localPosition.covYy
-    let siteId = localPosition.siteID
-    let signature = localPosition.signature
-
-
-    }catch{
-
-        print(error)
-    }
-
+requestVersion(completion: @escaping  ((String) -> Void)) 
 ```
-## TagValidateMessage(of:Data)
-
-Validate the completeness of the message by checking the Start- and End-byte and remove them from the array.
-
-## TagPositionResponse
-
-Checks the validated array for the Position-Command-Byte and extracts the local position values in dm (?) vom it.
-
-
-
-
-Left at:
-
-Misaligned Pointer error in Status Decoder
-Parsing of Status Data
-chaging moving pointer to byteRange
-Should the stream of data be automatically identifed for the message type? (Classifier)
-Buffer with all messages or register listener event
