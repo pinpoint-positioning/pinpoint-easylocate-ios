@@ -74,10 +74,12 @@ Stops positioning mode
 
 ### requestStatus() 
 Requests the current Status from the connected tracelet.
+
 The answer is published in `status: TL_StatusResponse`
 
 #### Structure of `TL_StatusResponse()`
 
+```
 struct TL_StatusResponse {    
     public var role = Int8()
     public var address = Int16()
@@ -96,11 +98,12 @@ struct TL_StatusResponse {
     public var txLateCnt = Int16()
     public var flagsByte = UInt8()
 }
-
+```
   
     
 ### requestVersion() 
-Requests the current Status from the connected tracelet and returns a string in the completionj handler
+Requests the current Status from the connected tracelet and returns a string in the completionj handler.
+
 The answer is published in ` version: TL_VersionResponse`
 
 #### Structure of `TL_VersionResponse`
@@ -112,7 +115,8 @@ struct TL_VersionResponse {
 
 
 ### requestPosition()
-Requests the current Status from the connected tracelet and returns a string in the completionj handler
+Requests the current Status from the connected tracelet and returns a string in the completionj handler.
+
 The answer is published in ` localPosition: TL_PositionResponse`
 
 #### Structure of `TL_VersionResponse`
