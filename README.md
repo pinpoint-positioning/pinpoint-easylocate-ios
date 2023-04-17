@@ -22,28 +22,28 @@ Import the SDK and instantiate the API
 
 If the API-class is observed, the following variables are published:
 
-* allResponses:String
-* generalState:STATE
+* `allResponses:String`
+* `generalState:STATE`
     - .IDLE
     - .SCANNING
     - .CONNECTING
     - .CONNECTED
     - .DISCONNECTED
-    - .WAITING_FOR_POSITION
-    - .WAITING_FOR_STATUS
-    - .WAITING_FOR_VERSION
     - .WAITING_FOR_RESPONSE
-* scanState:STATE
+* `scanState:STATE`
     - .IDLE
     - .SCANNING
-* localPosition: TL_PositionResponse
-* status: TL_StatusResponse
-* version: TL_VersionResponse
-* discoveredTracelets: [CBPeripheral]
-* connectedTracelet: CBPeripheral?
+* `localPosition: TL_PositionResponse`
+* `status: TL_StatusResponse`
+* `version: TL_VersionResponse`
+* `discoveredTracelets: [CBPeripheral]`
+* `connectedTracelet: CBPeripheral?`
 
 ## Usage
-e.g.: `api.allResponses`, `api.status`
+e.g.: 
+`api.allResponses`
+
+`api.status`
 
 
 
@@ -62,22 +62,16 @@ Connects to a passed Pinpoint tracelet
 ### func disconnect() 
 Disconnects from a tracelet
 
-###     
-showMe(tracelet: CBPeripheral) 
+### showMe(tracelet: CBPeripheral) 
 Sents a "ShowMe"-command the the passed tracelet.
-The tracelet light up a blue LED
-
+The tracelet light up a blue LED.
 
 ### startPositioning()   
 Puts tracelet in positioning mode  
 
 ### stopPositioning() 
 Stops positioning mode  
-```
 
-
-
-```
 ### requestStatus() 
 Requests the current Status from the connected tracelet.
 The answer is published in `status: TL_StatusResponse`
@@ -117,7 +111,7 @@ struct TL_VersionResponse {
 ```
 
 
-### equestPosition()
+### requestPosition()
 Requests the current Status from the connected tracelet and returns a string in the completionj handler
 The answer is published in ` localPosition: TL_PositionResponse`
 
