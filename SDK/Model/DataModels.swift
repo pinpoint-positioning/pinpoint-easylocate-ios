@@ -26,7 +26,7 @@ public struct TL_PositionResponse {
 public struct TL_StatusResponse {
     
     public var role = Int8()
-    public var address = Int16()
+    public var address = UInt16()
     public var siteIDe = String()
     // Check if UInt is correct for panID
     public var panID = UInt16()

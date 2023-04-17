@@ -124,7 +124,7 @@ public class TraceletResponse {
         let roleByte = Int8 (roleByteRange.littleEndian)
         let address = addressRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
-            return rawPtr.load(as: Int16.self).littleEndian })
+            return rawPtr.load(as: UInt16.self).littleEndian })
         let siteID = siteIDRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})

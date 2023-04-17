@@ -213,8 +213,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     // MARK: - getStatus()
-    
-    public func requestStatus(completion: @escaping ((TL_StatusResponse) -> Void)) {
+    //removed: completion: @escaping ((TL_StatusResponse) -> Void)
+    public func requestStatus() {
         
         let cmdByte = ProtocolConstants.cmdCodeGetStatus
         let data = Encoder.encodeByte(cmdByte)
@@ -243,18 +243,18 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - getStatusString()
     
-     public func getStatusString(completion: @escaping ((String) -> Void)) {
-        
-        requestStatus { status in
-            let statusString =  """
-                                SiteID: \(status.siteIDe)\n \
-                                Battery Level: \(status.batteryLevel)\n \
-                                PosX: \(status.posX)
-                                """
-            print("statusString")
-            completion(statusString)
-        }
-    }
+//     public func getStatusString(completion: @escaping ((String) -> Void)) {
+//
+//        requestStatus { status in
+//            let statusString =  """
+//                                SiteID: \(status.siteIDe)\n \
+//                                Battery Level: \(status.batteryLevel)\n \
+//                                PosX: \(status.posX)
+//                                """
+//            print("statusString")
+//            completion(statusString)
+//        }
+//    }
 
     // MARK: - getPosition()
     
@@ -307,8 +307,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - getVersion()
+    // removed completion: @escaping  ((String) -> Void)
     
-    public func requestVersion(completion: @escaping  ((String) -> Void)) {
+    public func requestVersion() {
         guard generalState == STATE.CONNECTED else {
             print ("State must be CONNECTED to send command")
             return
@@ -411,7 +412,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
-            allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n\n"
+            allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n"
             
             // Debug - Log to File"!!!!!!
             positionLog.append(allResponses)
@@ -420,7 +421,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if (valByteArray[0] == ProtocolConstants.cmdCodeStatus)
         {
             status =  TraceletResponse().GetStatusResponse(from: byteArray)
-            allResponses = "role: \(status.role) panID: \(status.panID) site: \(status.siteIDe)\n\n"
+            allResponses = "role: \(status.role) panID: \(status.panID) site: \(status.siteIDe)\n"
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion)
