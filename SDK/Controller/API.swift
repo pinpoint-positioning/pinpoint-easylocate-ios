@@ -221,8 +221,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         if let tracelet = connectedTracelet {
             sendWithResponse(to: tracelet, data: data)
-        }
-        
+        }        
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
         
@@ -244,7 +243,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - getStatusString()
     
-    public func getStatusString(completion: @escaping ((String) -> Void)) {
+     public func getStatusString(completion: @escaping ((String) -> Void)) {
         
         requestStatus { status in
             let statusString =  """
@@ -256,30 +255,47 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             completion(statusString)
         }
     }
+
+    // MARK: - getPosition()
     
+    //removed:  completion: @escaping ((TL_PositionResponse) -> Void)
     
-    
-    // MARK: - GetPosition()
-    
-    public func getLocalPosition(data:Data) -> TL_PositionResponse {
+    public func requestPosition() {
+        guard generalState == STATE.CONNECTED else {
+            print ("State must be CONNECTED to send command")
+            return
+        }
         
-        let localPosition = TraceletResponse().GetPositionResponse(from: data)
-        allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) site: \(localPosition.siteID)\n\n"
-        return localPosition
+        let cmdByte = ProtocolConstants.cmdCodeStartPositioning
+        let data = Encoder.encodeByte(cmdByte)
         
+        if let tracelet = connectedTracelet {
+            sendWithResponse(to: tracelet, data: data)
+        }
+        
+        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+        
+        //        freezeBuffer { buffer in
+        //            for message in buffer {
+        //                print(self.getCmdByte(from: message.message))
+        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodePosition)  {
+        //                    completion(TraceletResponse().GetPositionResponse(from: message.message))
+        //                    // If there are two status messages in the buffer, only the first will be returned.
+        //                    // Not sure if this is fine
+        //                    print("Position found:  \(TraceletResponse().GetPositionResponse(from: message.message))")
+        //                    self.messageBuffer.removeAll()
+        //                }
+        //            }
+        //        }
     }
     
-    
-    
-    
-    // MARK: - RSSI()
     
     
     // Use RSSI to connect only when close ( > -50 db).
     // Sometimes RSSI returns max value 127. Excluded it for now.
     // Maybe include PowerTX Level- -> TBD
     
-     func inProximity(_ RSSI: NSNumber) -> Bool {
+    public func inProximity(_ RSSI: NSNumber) -> Bool {
         if (RSSI.intValue > -50 && RSSI != 127){
             return true
         } else {
