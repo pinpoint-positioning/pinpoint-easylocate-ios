@@ -51,7 +51,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     @Published public var localPosition = TL_PositionResponse()
     @Published public var status = TL_StatusResponse()
     @Published public var version = TL_VersionResponse()
-    @Published public var discoveredTracelets = [CBPeripheral]()
+    var discoveredTracelets = [CBPeripheral]()
     @Published public var connectedTracelet: CBPeripheral?
     
     // Buffer
@@ -76,7 +76,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - Scan()
     // TBD -> Return list of compatible devices
-    public func scan(timeout: Double)
+    public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
         guard generalState == STATE.DISCONNECTED else {
             
@@ -93,18 +93,15 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         //Initiate BT Scan
         centralManager.scanForPeripherals(withServices: nil, options: options)
-        
+          
         // Stop scan after timeout
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {            
             self.stopScan()
+            completion(self.discoveredTracelets)
         }
     }
     
-    func getCharacteristicsForDiscoveredTracelets(tracelets:[CBPeripheral]) {
-        for device in tracelets {
-            device.discoverServices([UUIDs.traceletNordicUARTService])
-        }
-    }
+
     
     
     // MARK: - StopScan()
@@ -228,6 +225,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
         
+        
         //        freezeBuffer { buffer in
         //            for message in buffer {
         //                print(self.getCmdByte(from: message.message))
@@ -244,8 +242,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-    // MARK: - getStatusString()
-    
+
 //     public func getStatusString(completion: @escaping ((String) -> Void)) {
 //
 //        requestStatus { status in
