@@ -9,7 +9,7 @@ import Foundation
 
 
 // Positin Model
-public struct TL_PositionResponse {
+public struct TL_PositionResponse:Equatable {
     
     public var xCoord = Double()
     public var yCoord = Double()

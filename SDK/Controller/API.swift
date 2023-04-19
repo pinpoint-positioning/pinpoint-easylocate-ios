@@ -28,6 +28,8 @@ import CoreBluetooth
 
 
 public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
+    public static let shared = API()
+    
     
     
     
@@ -59,6 +61,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     let decoder = Decoder()
     var rxCharacteristic: CBCharacteristic?
+
       
     
     public override init() {
@@ -350,7 +353,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
-        print(messageBuffer)
+
         
     }
     
@@ -364,11 +367,10 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // Delay until buffer is frozen when requested
-    func freezeBuffer(completion: @escaping (([BufferElement]) -> Void)) {
+    public func freezeBuffer(completion: @escaping (([BufferElement]) -> Void)) {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let buffer = self.messageBuffer
-            print("buffer frozen: \(buffer)")
             completion(buffer)
         }
     }
@@ -404,6 +406,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - ClassifyResponse()
     
+   
     public func ClassifyResponse (from byteArray: Data)
     
     {
@@ -567,6 +570,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             
             switch comState {
             case .WAITING_FOR_RESPONSE:
+                storeInBuffer(data: BufferElement(message: data))
                 ClassifyResponse(from: data)
             default:
                 print ("unkown message")
