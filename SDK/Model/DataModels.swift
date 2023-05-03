@@ -57,3 +57,13 @@ public struct BufferElement
     public var timestamp = NSDate().timeIntervalSince1970
     public var message:Data
 }
+
+public struct Wgs84Position {
+   var lat: Double
+   var lon: Double
+   var alt: Double
+   var covXx:Double
+   var covXy:Double
+   var covYy:Double
+   var siteID:String
+}

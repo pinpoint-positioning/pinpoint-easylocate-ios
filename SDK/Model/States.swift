@@ -11,7 +11,7 @@ import Foundation
 
 public enum STATE {
     
-    // States accessible to enduser
+    // States accessible to devs
     
     case IDLE
     case SCANNING

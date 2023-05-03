@@ -29,6 +29,7 @@ public struct ProtocolConstants {
     public static let cmdCodeStartPositioning:UInt8 = 0x05
     public static let cmdCodeStopPositioning:UInt8 = 0x00
     public static let cmdCodeSetMotionCheckIntervalResponse:UInt8 = 0xa4
+    public static let cmdCodeSetPositioningInterval:UInt8 = 0x23
     
     
     

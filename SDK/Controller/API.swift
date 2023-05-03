@@ -10,26 +10,8 @@ import CoreBluetooth
 
 
 
-// ToDo:
-
-// 1. Scan() should return a list of devices
-// Send StopPos after connect
-
-// 2. States with Rebecca
-// 3. Buffer logic is not good. (Messages are lost)
-// 4. Clarify method usage
-// 5. How to return API-Object, when connected?
-// Exceptions?
-// Logging
-
-// Rebecca Buffer
-// Local position
-
-
-
 public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = API()
-    
     
     
     
@@ -61,8 +43,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     let decoder = Decoder()
     var rxCharacteristic: CBCharacteristic?
-
-      
+    
+    
     
     public override init() {
         super.init()
@@ -75,7 +57,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - Scan()
-    // TBD -> Return list of compatible devices
+    
+    
+    /// Initiate a scan for nearby tracelets
+    /// - Parameters:
+    ///   - timeout: timeout for the scan in seconds
+    ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
         guard generalState == STATE.DISCONNECTED else {
@@ -84,7 +71,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return
         }
         discoveredTracelets = []
-      
+        
         // Set State
         changeScanState(changeTo: .SCANNING)
         
@@ -93,15 +80,15 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         //Initiate BT Scan
         centralManager.scanForPeripherals(withServices: nil, options: options)
-          
+        
         // Stop scan after timeout
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {            
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
             self.stopScan()
             completion(self.discoveredTracelets)
         }
     }
     
-
+    
     
     
     // MARK: - StopScan()
@@ -135,7 +122,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - Send()
     // Send write command to BT device
-     func send(to tracelet: CBPeripheral, data: Data) {
+    func send(to tracelet: CBPeripheral, data: Data) {
         
         if let rxCharacteristic = rxCharacteristic {
             tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
@@ -145,7 +132,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-     func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
+    func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
         guard generalState == STATE.CONNECTED else {
             print ("State must be CONNECTED to send command")
             return
@@ -156,7 +143,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             
         }
     }
-     
+    
     
     
     // MARK: - ShowMe()
@@ -193,6 +180,22 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
+    
+    /// Sets a positioning interval
+    /// - Parameter interval: interval in n x 250ms
+    ///
+    public func setPositioningInterval(interval:Int8) {
+        let Uint8Interval: UInt8 = UInt8(bitPattern: interval)
+        let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetPositioningInterval, Uint8Interval]
+        
+        if let tracelet = connectedTracelet {
+            send(to: tracelet, data: Encoder.encodeBytes(dataArray))
+        }
+    }
+    
+    
+    // MARK: - changeStates
+    
     func changeGeneralState(changeTo:STATE) {
         DispatchQueue.main.async {
             self.generalState = changeTo
@@ -221,7 +224,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         if let tracelet = connectedTracelet {
             sendWithResponse(to: tracelet, data: data)
-        }        
+        }
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
         
@@ -242,20 +245,20 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-
-//     public func getStatusString(completion: @escaping ((String) -> Void)) {
-//
-//        requestStatus { status in
-//            let statusString =  """
-//                                SiteID: \(status.siteIDe)\n \
-//                                Battery Level: \(status.batteryLevel)\n \
-//                                PosX: \(status.posX)
-//                                """
-//            print("statusString")
-//            completion(statusString)
-//        }
-//    }
-
+    
+    //     public func getStatusString(completion: @escaping ((String) -> Void)) {
+    //
+    //        requestStatus { status in
+    //            let statusString =  """
+    //                                SiteID: \(status.siteIDe)\n \
+    //                                Battery Level: \(status.batteryLevel)\n \
+    //                                PosX: \(status.posX)
+    //                                """
+    //            print("statusString")
+    //            completion(statusString)
+    //        }
+    //    }
+    
     // MARK: - getPosition()
     
     //removed:  completion: @escaping ((TL_PositionResponse) -> Void)
@@ -305,6 +308,16 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
+    /// Get the WGS84 Reference
+    /// - Returns: Wgs84Position
+    public func getWgs84Position() async -> Double {
+        
+        let wgsRef = Wgs84Reference().convertToWgs84(position: localPosition)
+        
+        return wgsRef.lat
+    }
+    
+    
     
     // MARK: - getVersion()
     // removed completion: @escaping  ((String) -> Void)
@@ -350,7 +363,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
-
+        
         
     }
     
@@ -401,9 +414,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // ###################### DEBUG END #########################
     
     
+    
+    
+    
     // MARK: - ClassifyResponse()
     
-   
+    var location = AsyncLocationStream.shared
     public func ClassifyResponse (from byteArray: Data)
     
     {
@@ -411,6 +427,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
+            location.continuation?.yield(TraceletResponse().GetPositionResponse(from: byteArray))
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
             allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n"
             
@@ -439,9 +456,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         return valMesssage[0]
         
     }
-    
-    
-    
     
     
     //MARK: - Delegate Functions
@@ -483,10 +497,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             discoveredTracelets.append(peripheral)
             //Set State
             traceletInRange = true
-            // Discover UART Service
             
         }
-
+        
     }
     
     
@@ -494,16 +507,16 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Delegate - Called when connection was successful
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-
-            // Set State
-            generalState = STATE.CONNECTED
-            stopScan()
-            deviceName = peripheral.name ?? "unkown"
-            connectedTracelet = peripheral
-            // Discover UART Service
-            peripheral.discoverServices([UUIDs.traceletNordicUARTService])
         
-
+        // Set State
+        generalState = STATE.CONNECTED
+        stopScan()
+        deviceName = peripheral.name ?? "unkown"
+        connectedTracelet = peripheral
+        // Discover UART Service
+        peripheral.discoverServices([UUIDs.traceletNordicUARTService])
+        
+        
     }
     
     
@@ -511,7 +524,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
-
+                
                 // Discover UART Service
                 if service.uuid == UUIDs.traceletNordicUARTService{
                     
@@ -542,14 +555,14 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 }
                 else if characteristic.uuid == UUIDs.traceletRxChar {
                     print ("rxfound")
-                   // stopPositioning()
+                    // stopPositioning()
                     rxCharacteristic = characteristic
                 }
             }
         }
     }
     
-
+    
     
     
     // Delegate - Called when char value has updated for defined char
