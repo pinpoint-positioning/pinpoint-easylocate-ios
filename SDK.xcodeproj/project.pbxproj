@@ -14,6 +14,10 @@
 		D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615929C4589D00901DC5 /* Encoding.swift */; };
 		D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615B29C85CA200901DC5 /* TraceletResponses.swift */; };
 		D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615D29C85CFB00901DC5 /* DataModels.swift */; };
+		D19576C029F7A8040072576F /* GeoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19576BF29F7A8040072576F /* GeoTools.swift */; };
+		D1BDBA9729FAAC2E00167E3F /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BDBA9629FAAC2E00167E3F /* Location.swift */; };
+		D1BDBA9929FBA4D900167E3F /* NewApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BDBA9829FBA4D900167E3F /* NewApi.swift */; };
+		D1BDBA9B29FBA5BD00167E3F /* BT.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BDBA9A29FBA5BD00167E3F /* BT.swift */; };
 		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
 		D1FE236F29C06E6B002F1049 /* SDK.h in Headers */ = {isa = PBXBuildFile; fileRef = D1FE236C29C06E6B002F1049 /* SDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -41,6 +45,10 @@
 		D18B615929C4589D00901DC5 /* Encoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoding.swift; sourceTree = "<group>"; };
 		D18B615B29C85CA200901DC5 /* TraceletResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraceletResponses.swift; sourceTree = "<group>"; };
 		D18B615D29C85CFB00901DC5 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		D19576BF29F7A8040072576F /* GeoTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTools.swift; sourceTree = "<group>"; };
+		D1BDBA9629FAAC2E00167E3F /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
+		D1BDBA9829FBA4D900167E3F /* NewApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewApi.swift; sourceTree = "<group>"; };
+		D1BDBA9A29FBA5BD00167E3F /* BT.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BT.swift; sourceTree = "<group>"; };
 		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1FE236C29C06E6B002F1049 /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
@@ -127,6 +135,10 @@
 				D18B614329C1F9A700901DC5 /* Encoder.swift */,
 				D119BC7E29D71FBC00E0BEF8 /* API.swift */,
 				D18B615B29C85CA200901DC5 /* TraceletResponses.swift */,
+				D19576BF29F7A8040072576F /* GeoTools.swift */,
+				D1BDBA9629FAAC2E00167E3F /* Location.swift */,
+				D1BDBA9829FBA4D900167E3F /* NewApi.swift */,
+				D1BDBA9A29FBA5BD00167E3F /* BT.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -250,7 +262,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */,
+				D1BDBA9B29FBA5BD00167E3F /* BT.swift in Sources */,
+				D1BDBA9929FBA4D900167E3F /* NewApi.swift in Sources */,
 				D1FE237929C06E8E002F1049 /* Strings.swift in Sources */,
+				D19576C029F7A8040072576F /* GeoTools.swift in Sources */,
 				D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */,
 				D119BC7F29D71FBC00E0BEF8 /* API.swift in Sources */,
 				D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */,
@@ -258,6 +273,7 @@
 				D1FE237A29C06E8E002F1049 /* UUUIDs.swift in Sources */,
 				D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */,
 				D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */,
+				D1BDBA9729FAAC2E00167E3F /* Location.swift in Sources */,
 				D1FE237829C06E8E002F1049 /* ProtocolConstants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
