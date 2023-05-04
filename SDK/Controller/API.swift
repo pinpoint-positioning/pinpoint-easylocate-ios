@@ -126,7 +126,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
         
-        guard centralManager.isScanning else {
+        guard !centralManager.isScanning else {
             print ("is already scanning")
             return
         }
