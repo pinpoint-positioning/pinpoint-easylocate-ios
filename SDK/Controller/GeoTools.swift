@@ -7,7 +7,7 @@
 
 import Foundation
 
-
+// In progress
 
 // WGS 84 parameters: see http://www.jpz.se/Html_filer/wgs_84.html
 let RADIUS_EQUATORIAL = 6378137.0; // in meters
@@ -20,7 +20,7 @@ let M_PER_DEGREE = 110000; // meters per 1 degree WGS
  public class Wgs84Reference: ObservableObject {
     
     public static let shared = Wgs84Reference()
-   lazy var latRef = Double()
+    lazy var latRef = Double()
     lazy var lonRef = Double()
     lazy var aziRef = Double()
     lazy var aziRadians = deg2rad(aziRef);

@@ -81,6 +81,8 @@ public class NewApi: NSObject, ObservableObject, CBPeripheralDelegate {
     
 
     
+
+    
     
     // MARK: - StopScan()
     

@@ -9,7 +9,7 @@ import Foundation
 
  public struct Strings {
      public static let SCAN_STARTED = "Scan started.\n"
-     public  static let SEARCH_FOR_TRACELET = "Searching for Tracelet.\nBring it close to the phone.\n\n"
+     public static let SEARCH_FOR_TRACELET = "Searching for Tracelet.\nBring it close to the phone.\n\n"
      public static let TRACELET_FOUND = "Tracelet in Range.\n"
      public static let CONNECT_TO_TRACELET = "Connect to Tracelet.\n"
      public static let SCAN_STOPPED = "Scan stopped.\n"
