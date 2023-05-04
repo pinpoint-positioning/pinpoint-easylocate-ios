@@ -56,6 +56,66 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
+    // MARK: - ScanForDevices()
+    
+    public func scanForBluetoothDevices() -> [CBPeripheral] {
+        var discoveredPeripherals: [CBPeripheral] = []
+       // let centralManager = CBCentralManager()
+
+        centralManager.scanForPeripherals(withServices: nil, options: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            self.centralManager.stopScan()
+        }
+
+        while centralManager.isScanning {
+            RunLoop.current.run(mode: .default, before: .distantFuture)
+        }
+
+        discoveredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [])
+        return discoveredPeripherals
+    }
+    
+    
+    // MARK: - Scan()
+    
+    
+    /// Initiate a scan for nearby tracelets
+    /// - Parameters:
+    ///   - timeout: timeout for the scan in seconds
+    ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
+    public func scan_new(timeout: Double) async -> [CBPeripheral]
+    {
+        guard generalState == STATE.DISCONNECTED else {
+            
+            print ("Can only start scan from DISCONNECTED")
+            return [CBPeripheral]()
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
+            self.stopScan()
+            
+        }
+        discoveredTracelets = []
+        
+        // Set State
+        changeScanState(changeTo: .SCANNING)
+        
+        //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
+        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: false)]
+        
+        //Initiate BT Scan
+        centralManager.scanForPeripherals(withServices: nil, options: options)
+  
+        
+        
+        discoveredTracelets = centralManager.retrievePeripherals(withIdentifiers: [])
+        return discoveredTracelets
+
+    }
+    
+    
+    
     // MARK: - Scan()
     
     
@@ -65,6 +125,11 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
+        
+        guard centralManager.isScanning else {
+            print ("is already scanning")
+            return
+        }
         guard generalState == STATE.DISCONNECTED else {
             
             print ("Can only start scan from DISCONNECTED")
@@ -131,7 +196,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-    
+    // Not needed yet
     func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
         guard generalState == STATE.CONNECTED else {
             print ("State must be CONNECTED to send command")
