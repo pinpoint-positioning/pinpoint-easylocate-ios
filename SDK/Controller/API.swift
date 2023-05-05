@@ -79,39 +79,15 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - Scan()
     
-    
-    /// Initiate a scan for nearby tracelets
-    /// - Parameters:
-    ///   - timeout: timeout for the scan in seconds
-    ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
-    public func scan_new(timeout: Double) async -> [CBPeripheral]
-    {
-        guard generalState == STATE.DISCONNECTED else {
-            
-            print ("Can only start scan from DISCONNECTED")
-            return [CBPeripheral]()
-        }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
-            self.stopScan()
-            
-        }
-        discoveredTracelets = []
-        
-        // Set State
-        changeScanState(changeTo: .SCANNING)
-        
-        //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
-        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: false)]
-        
-        //Initiate BT Scan
-        centralManager.scanForPeripherals(withServices: nil, options: options)
-  
-        
-        
-        discoveredTracelets = centralManager.retrievePeripherals(withIdentifiers: [])
-        return discoveredTracelets
 
+    public func scanForBluetoothDevices() async throws -> [CBPeripheral] {
+        let manager = CBCentralManager()
+
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let peripherals = manager.retrievePeripherals(withIdentifiers:[])
+            continuation.resume(returning: peripherals)
+        }
     }
     
     
