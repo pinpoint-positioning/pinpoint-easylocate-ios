@@ -451,7 +451,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     
-    // MARK: - Debug - Save Logs
+    // MARK: - Debug - Save Logs / Logger
     // ###################### DEBUG #########################
     // Only for Debug -> Save logged data to file
     
@@ -491,6 +491,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func clearLogFile () {
         logger.clearLogFile()
     }
+
 
     // ###################### DEBUG END #########################
     

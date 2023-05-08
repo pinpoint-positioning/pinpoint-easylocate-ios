@@ -11,7 +11,7 @@ class Logger {
         
         let documentDirectory = getDocumentsDirectory()
         let fileURL = documentDirectory.appendingPathComponent("log.txt")
-        let content = "\(dateString): \(functionName) - \(error)\n ------------------------ \n"
+        let content = "\n ------------------------ \n \(dateString): \(functionName) - \(error)"
         print ("Logged: \(content)")
         
         if !FileManager.default.fileExists(atPath: fileURL.path) {
@@ -44,4 +44,5 @@ class Logger {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
     }
+
 }
