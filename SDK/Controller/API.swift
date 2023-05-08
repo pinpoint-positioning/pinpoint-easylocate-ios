@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreBluetooth
+import Combine
 
 
 
@@ -56,40 +57,40 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-    // MARK: - ScanForDevices()
-    
-    public func scanForBluetoothDevices() -> [CBPeripheral] {
-        var discoveredPeripherals: [CBPeripheral] = []
-       // let centralManager = CBCentralManager()
-
-        centralManager.scanForPeripherals(withServices: nil, options: nil)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-            self.centralManager.stopScan()
-        }
-
-        while centralManager.isScanning {
-            RunLoop.current.run(mode: .default, before: .distantFuture)
-        }
-
-        discoveredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [])
-        return discoveredPeripherals
-    }
-    
-    
-    // MARK: - Scan()
-    
-
-    public func scanForBluetoothDevices() async throws -> [CBPeripheral] {
-        let manager = CBCentralManager()
-
-
-        return try await withCheckedThrowingContinuation { continuation in
-            let peripherals = manager.retrievePeripherals(withIdentifiers:[])
-            continuation.resume(returning: peripherals)
-        }
-    }
-    
+//    // MARK: - ScanForDevices()
+//
+//    public func scanForBluetoothDevices() -> [CBPeripheral] {
+//        var discoveredPeripherals: [CBPeripheral] = []
+//       // let centralManager = CBCentralManager()
+//
+//        centralManager.scanForPeripherals(withServices: nil, options: nil)
+//
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+//            self.centralManager.stopScan()
+//        }
+//
+//        while centralManager.isScanning {
+//            RunLoop.current.run(mode: .default, before: .distantFuture)
+//        }
+//
+//        discoveredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [])
+//        return discoveredPeripherals
+//    }
+//
+//
+//    // MARK: - Scan()
+//
+//
+//    public func scanForBluetoothDevices() async throws -> [CBPeripheral] {
+//        let manager = CBCentralManager()
+//
+//
+//        return try await withCheckedThrowingContinuation { continuation in
+//            let peripherals = manager.retrievePeripherals(withIdentifiers:[])
+//            continuation.resume(returning: peripherals)
+//        }
+//    }
+//
     
     
     // MARK: - Scan()
@@ -535,7 +536,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
         
         if (peripheral.name?.contains("dwTag") ?? false) {
-            discoveredTracelets.append(peripheral)
+            if discoveredTracelets.contains(peripheral)
+            {
+                print ("already in list")
+            } else {
+                discoveredTracelets.append(peripheral)
+            }
+            
             //Set State
             traceletInRange = true
             
