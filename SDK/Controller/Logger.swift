@@ -1,66 +1,47 @@
-import SwiftUI
-
-
-public class Logger {
+//Logger
+   
+class Logger {
     
-    public static let shared = Logger()
     
-    public let logFileName = "error_log.txt"
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        return formatter
-    }()
-    
-    public lazy var logFileURL: URL = {
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let logFileURL = documentsURL.appendingPathComponent(logFileName)
-        return logFileURL
-    }()
-    
-    public func log(error: String) {
-        let logEntry = "\(dateFormatter.string(from: Date())): \(error)\n"
-        print(logEntry)
+    func log(_ error: String,functionName: String = #function) {
+        let date = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
+        let dateString = dateFormatter.string(from: date)
         
-        do {
-            let fileHandle = try FileHandle(forWritingTo: logFileURL)
-            fileHandle.seekToEndOfFile()
-            fileHandle.write(logEntry.data(using: .utf8)!)
-            fileHandle.closeFile()
-        } catch {
-            print("Error writing to log file: \(error)")
+        let documentDirectory = getDocumentsDirectory()
+        let fileURL = documentDirectory.appendingPathComponent("log.txt")
+        let content = "\(dateString): \(functionName) - \(error)\n ------------------------ \n"
+        print ("Logged: \(content)")
+        
+        if !FileManager.default.fileExists(atPath: fileURL.path) {
+            FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: nil)
         }
-    }
-    
-    public func readLogFile() -> String? {
-        do {
-            let logText = try String(contentsOf: logFileURL, encoding: .utf8)
-            return logText
-        } catch {
-            print("Error reading log file: \(error)")
-            return nil
-        }
-    }
-    
-    public func openLogFile() {
-        if FileManager.default.fileExists(atPath: logFileURL.path) {
-            let activityViewController = UIActivityViewController(activityItems: [logFileURL], applicationActivities: nil)
-            UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+        
+        if let handle = try? FileHandle(forWritingTo: fileURL) {
+            handle.seekToEndOfFile() // moving pointer to the end
+            handle.write(content.data(using: .utf8)!) // adding content
+            handle.closeFile() // closing the file
         } else {
-            print("Log file not found")
+            print("Error writing to log file.")
         }
     }
     
-    public func saveLogFile() {
-        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let newFileURL = documentsURL.appendingPathComponent(logFileName)
-        
+    
+    
+     func clearLogFile() {
+        let documentDirectory = getDocumentsDirectory()
+        let logFilePath = documentDirectory.appendingPathComponent("log.txt")
         do {
-            try FileManager.default.copyItem(at: logFileURL, to: newFileURL)
-            let activityViewController = UIActivityViewController(activityItems: [newFileURL], applicationActivities: nil)
-            UIApplication.shared.windows.first?.rootViewController?.present(activityViewController, animated: true, completion: nil)
+            try FileManager.default.removeItem(at: logFilePath)
         } catch {
-            print("Error saving log file: \(error)")
+            print("Error clearing log file: \(error.localizedDescription)")
         }
+    }
+    
+    
+    func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
     }
 }
