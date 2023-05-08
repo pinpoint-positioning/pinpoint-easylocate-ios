@@ -9,6 +9,8 @@ import Foundation
 
 
 public class Encoder {
+    
+    let logger = Logger()
 
   // TODO put encodeByte and encodeBytes together
 

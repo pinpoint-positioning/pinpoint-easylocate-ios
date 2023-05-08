@@ -3,7 +3,14 @@
 class Logger {
     
     
-    func log(_ error: String,functionName: String = #function) {
+    
+    enum LogType {
+        case Info
+        case Warning
+        case Error
+    }
+    
+    func log(type:LogType, _ message: String,functionName: String = #function) {
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
@@ -11,7 +18,7 @@ class Logger {
         
         let documentDirectory = getDocumentsDirectory()
         let fileURL = documentDirectory.appendingPathComponent("log.txt")
-        let content = "\n ------------------------ \n \(dateString): \(functionName) - \(error)"
+        let content = "\n ------------------------ \n [\(type)] \(dateString): \(functionName) - \(message)"
         print ("Logged: \(content)")
         
         if !FileManager.default.fileExists(atPath: fileURL.path) {

@@ -12,6 +12,7 @@ public class TraceletResponse {
     
     public init () {}
     
+    let logger = Logger()
     
     //MARK: - Get Position Response
     
@@ -76,6 +77,8 @@ public class TraceletResponse {
         
         let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature)
         
+        //This will log all positions in the log file
+        //logger.log(type: .Info, String(describing: response))
         return response
         
     }
@@ -191,7 +194,7 @@ public class TraceletResponse {
         
             return TL_VersionResponse(version: version)
         }else {
-            let msg = "Received unknown response to version request with command code 0x${commandCode.toRadixString(16)}.";
+            logger.log(type: .Warning, "Received unknown response to version request")
             return TL_VersionResponse()
         }
 

@@ -11,9 +11,9 @@ import Foundation
 public class Decoder {
     
     public init() {}
-    
     lazy var byteArray = Data()
     lazy var decByteArray = [UInt8]()
+    let logger = Logger()
     
     public func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
         
@@ -27,13 +27,13 @@ public class Decoder {
         // Check if array has start byte
         if (byteArray[0] != ProtocolConstants.startByte)
         {
-            print("No Start Byte")
+            logger.log(type: .Warning, "No Start Byte")
         }
         //Check if array has end byte
         //CAREFUL: Is forced unwrapped - TBD
         if (byteArray.last! != ProtocolConstants.stopByte)
         {
-            print ("No Stop Byte")
+            logger.log (type: .Warning, "No Stop Byte")
         }
         
         //Remove start byte
