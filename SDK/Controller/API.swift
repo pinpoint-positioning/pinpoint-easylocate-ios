@@ -51,8 +51,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
         centralManager.delegate = self
-        logger.log(type: .Info, "SDK initiated")
-        
+        logger.log(type: .Info, "SDK initiated: \n  BT-state: \(centralManager.state)")
     }
     
     
@@ -108,7 +107,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         logger.log(type: .Info, "Scan started (State: \(generalState))")
         
         guard bleState == .BT_OK else {
-            logger.log(type: .Info, "Bluetooth not available: \(bleState)")
+            logger.log(type: .Error, "Bluetooth not available: \(bleState)")
             return
         }
         
@@ -135,7 +134,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         // Stop scan after timeout
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
             self.stopScan()
-            self.logger.log(type: .Info, "Discovered tracelets: \(self.discoveredTracelets)")
+
+            if self.discoveredTracelets == [] {
+                self.logger.log(type: .Warning, "No tracelets discovered")
+                completion([])
+            } else {
+                self.logger.log(type: .Info, "Discovered tracelets: \(self.discoveredTracelets)")
+            }
             completion(self.discoveredTracelets)
         }
     }
@@ -456,7 +461,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     
-    // MARK: - Debug - Save Logs / Logger
+    // MARK: - Debug - Logger
     // ###################### DEBUG #########################
     // Only for Debug -> Save logged data to file
     
@@ -470,24 +475,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             }
         }
     }
-    
-    func saveData() {
-        
-        let filename = getDocumentsDirectory().appendingPathComponent("positionLog\(Date()).txt")
-        
-        do {
-            
-            try positionLog.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
-            print("saved: \(positionLog)")
-            
-        } catch {
-            allResponses = "save error"
-            // failed to write file
-        }
-    }
-    
-    
-    
+ 
     func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
@@ -551,17 +539,23 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         switch central.state {
         case .poweredOn:
             bleState = BLE_State.BT_OK
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         case .poweredOff:
             bleState = BLE_State.BT_NA
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         case .resetting:
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         case .unauthorized:
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         case .unsupported:
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         case .unknown:
+            logger.log(type: .Info, "BT changed to \(bleState)")
             break
         default:
             break
@@ -698,7 +692,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         // #### Debug vars -> Only for testing ####
         traceletInRange = false
         deviceName = ""
-        saveData()
         // #### Debug vars end ####
         
         
