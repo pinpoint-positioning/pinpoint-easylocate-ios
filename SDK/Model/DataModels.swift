@@ -159,3 +159,25 @@ public enum ConnectionError: Error {
     case characteristicsNotFound
     case peripheralError(Error)
 }
+
+
+
+
+public struct SiteFile: Codable {
+    public var map: Map
+
+}
+
+public struct Map:Codable {
+    public var mapFile: String
+    public var mapFileOriginX:Double
+    public var mapFileOriginY: Double
+    public var mapFileRes: Double
+    public var mapName: String
+    public var mapSiteId:String
+    public var originLatitude: Double
+    public var originLongitude: Double
+    public var originAzimuth:Double
+    public var uwbChannel: Int
+}
+
