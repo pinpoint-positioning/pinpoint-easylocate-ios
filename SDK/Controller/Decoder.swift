@@ -17,7 +17,6 @@ public class Decoder {
     
     public func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
         
-        let bA = [UInt8](byteArray)
         //Reset array every run
         if (!decByteArray.isEmpty)
         {

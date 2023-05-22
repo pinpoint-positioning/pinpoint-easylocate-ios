@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 
 // Positin Model
@@ -25,24 +26,60 @@ public struct TL_PositionResponse:Equatable {
 
 public struct TL_StatusResponse {
     
-    public var role = Int8()
-    public var address = UInt16()
-    public var siteIDe = String()
-    // Check if UInt is correct for panID
-    public var panID = UInt16()
-    public var posX = Int16()
-    public var posY = Int16()
-    public var posZ = Int16()
-    public var stateByte = Int8()
-    public var syncStateByte = Int8()
-    public var syncSlot = Int16() //?
-    public var syncModeByte = Int8()
-    public var motionStateByte = Int8()
-    public var batteryState = UInt8()
-    public var batteryLevel = UInt16() //?
-    public var txLateCnt = Int16()
-    public var flagsByte = UInt8()
-
+    public var role:String
+    public var address : String
+    public var siteIDe : String
+    public var panID :String
+    public var posX : String
+    public var posY : String
+    public var posZ : String
+    public var stateByte : String
+    public var syncStateByte : String
+    public var syncSlot : String
+    public var syncModeByte : String
+    public var motionStateByte :String
+    public var batteryState : String
+    public var batteryLevel : String
+    public var txLateCnt : String
+    public var flagsByte : String
+    
+    
+    public init(role:String = "",
+                address : String = "",
+                siteIDe:String = "",
+                panID: String = "",
+                posX:String = "",
+                posY: String = "",
+                posZ : String = "",
+                stateByte : String = "",
+                syncStateByte : String = "",
+                syncSlot : String = "",
+                syncModeByte : String = "",
+                motionStateByte : String = "",
+                batteryState :String = "",
+                batteryLevel :String = "",
+                txLateCnt : String = "",
+                flagsByte :String = "")
+    
+    {
+        self.role = role
+        self.address = address
+        self.siteIDe = siteIDe
+        self.panID = panID
+        self.posX = posX
+        self.posY = posY
+        self.posZ = posZ
+        self.stateByte = stateByte
+        self.syncStateByte = syncStateByte
+        self.syncSlot = syncSlot
+        self.syncModeByte = syncModeByte
+        self.motionStateByte = motionStateByte
+        self.batteryState = batteryState
+        self.batteryLevel = batteryLevel
+        self.txLateCnt = txLateCnt
+        self.flagsByte = flagsByte
+    }
+    
 }
 
 public struct TL_VersionResponse {
@@ -69,11 +106,8 @@ public struct Wgs84Position {
 }
 
 
-
-
-public struct SiteFile: Codable {
+public struct SiteData: Codable {
     public var map: Map
-
 }
 
 public struct Map:Codable {

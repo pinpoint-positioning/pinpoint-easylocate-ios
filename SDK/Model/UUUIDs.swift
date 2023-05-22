@@ -28,10 +28,3 @@ public class UUIDs: NSObject {
     
     
 }
-
-
-
-
-///** Official LNS Service UUID */
-//"00001819-0000-1000-8000-00805f9b34fb"
-

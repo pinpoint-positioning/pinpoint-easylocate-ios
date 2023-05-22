@@ -127,13 +127,13 @@ public class TraceletResponse {
         let roleByte = Int8 (roleByteRange.littleEndian)
         let address = addressRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
-            return rawPtr.load(as: UInt16.self).littleEndian })
+            return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
         let siteID = siteIDRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
         let panID = panRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
-            return rawPtr.load(as: UInt16.self).littleEndian })
+            return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
         let posX = posXRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
@@ -156,22 +156,22 @@ public class TraceletResponse {
         let flagsByte = UInt8(flagsByteRange.littleEndian)
         
         
-        let response = TL_StatusResponse(role: roleByte,
-                                         address: address,
-                                         siteIDe: siteID,
-                                         panID: panID,
-                                         posX: posX,
-                                         posY: posY,
-                                         posZ: posZ,
-                                         stateByte: stateByte,
-                                         syncStateByte: syncStateBytes,
-                                         syncSlot: syncSlot,
-                                         syncModeByte: syncModeByte,
-                                         motionStateByte: motionStateByte,
-                                         batteryState: batStateByte,
-                                         batteryLevel: batLevelBytes,
-                                         txLateCnt: txLateCnt,
-                                         flagsByte: flagsByte)
+        let response = TL_StatusResponse(role: String(roleByte),
+                                         address: String(address),
+                                         siteIDe: String(siteID),
+                                         panID: String(panID),
+                                         posX: String(posX),
+                                         posY: String(posY),
+                                         posZ: String(posZ),
+                                         stateByte: String(stateByte),
+                                         syncStateByte: String(syncStateBytes),
+                                         syncSlot: String(syncSlot),
+                                         syncModeByte: String(syncModeByte),
+                                         motionStateByte: String(motionStateByte),
+                                         batteryState: String(batStateByte),
+                                         batteryLevel: String(batLevelBytes),
+                                         txLateCnt: String(txLateCnt),
+                                         flagsByte: String(flagsByte))
         
         return response
         
@@ -187,20 +187,14 @@ public class TraceletResponse {
         let valByteArray = Decoder().ValidateMessage(of: byteArray)
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion) {
             
-            let version = Array(valByteArray[0...1]).withUnsafeBytes({
-                (rawPtr: UnsafeRawBufferPointer) in
-
-                return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian, radix: 16))"})
-        
-            return TL_VersionResponse(version: version)
-        }else {
+            let versionString = String(decoding: valByteArray, as: UTF8.self)
+            return TL_VersionResponse(version: versionString)
+        } else {
             logger.log(type: .Warning, "Received unknown response to version request")
-            return TL_VersionResponse()
+            return TL_VersionResponse(version: "")
         }
-
+        
     }
-    
-    
     
 }
 

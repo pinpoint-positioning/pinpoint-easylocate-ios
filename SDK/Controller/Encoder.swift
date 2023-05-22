@@ -14,7 +14,7 @@ public class Encoder {
 
   // TODO put encodeByte and encodeBytes together
 
-  /// Encode byte
+  // Encode single byte
   public static func encodeByte(_ byte: UInt8) -> Data {
     if byte == ProtocolConstants.startByte ||
         byte == ProtocolConstants.stopByte ||
@@ -32,7 +32,7 @@ public class Encoder {
     }
   }
 
-  /// Encode byte array
+  // Encode byte array
   public static func encodeBytes(_ bytes: [UInt8]) -> Data {
  
     var bytesAsHex = ""

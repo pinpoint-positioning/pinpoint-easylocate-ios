@@ -62,18 +62,18 @@ public enum Role {
 }
 
     
-    public func parseRole(byte:Int8) -> Role {
+    public func parseRole(byte:Int8) -> String {
     switch(byte) {
       case 1:
-        return Role.NR_MONITOR;
+        return "MONITOR"
       case 2:
-        return Role.NR_NODE30;
+        return "NODE30"
       case 3:
-        return Role.NR_TAG30;
+        return "TAG30"
       case 4:
-        return Role.NR_SATLET30;
+        return "SATLET30"
       default:
-        return Role.NR_UNDEFINED;
+        return "UNDEFINED"
     }
 
   }
