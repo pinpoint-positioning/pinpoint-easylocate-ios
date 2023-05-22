@@ -2,6 +2,7 @@
    
 class Logger {
     
+    public static let shared = Logger()
     
     
     enum LogType {

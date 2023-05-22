@@ -14,7 +14,7 @@ import UIKit
 
 public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = API()
-    let logger = Logger()
+    let logger = Logger.shared
     
     
     // Properties
@@ -38,15 +38,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     var discoveredTracelets = [CBPeripheral]()
     @Published public var connectedTracelet: CBPeripheral?
     
-    
-    
-    
-    
     private var response:Data?
-    
-    
-    
-    
     // Buffer
     public var messageBuffer = [BufferElement]()
     
@@ -169,7 +161,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     public func connect(device: CBPeripheral) {
         
-        logger.log(type: .Info, "Start connection")
+        logger.log(type: .Info, "Connection attempt initiated")
         
         guard generalState != STATE.CONNECTED else {
             logger.log(type: .Warning, "Already connected")
@@ -192,15 +184,17 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - Send()
     // Send write command to BT device
-    func send(to tracelet: CBPeripheral, data: Data) {
+    func send(to tracelet: CBPeripheral, data: Data) -> Bool {
+        var success = false
         guard generalState == STATE.CONNECTED else {
             logger.log(type: .Error, "State must be CONNECTED to use send()")
-            return
+            return success
         }
         if let rxCharacteristic = rxCharacteristic {
             tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
-            
+            success = true
         }
+        return success
     }
     
     
@@ -234,7 +228,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     public func startPositioning() {
         guard let tracelet = connectedTracelet else {
-            // handle missing tracelet or characteristic
+            logger.log(type: .Error, "No tracelet connected")
             return
         }
         let cmdByte = ProtocolConstants.cmdCodeStartPositioning
@@ -256,6 +250,24 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         let data = Encoder.encodeByte(cmdByte)
         send(to: tracelet, data: data)
         logger.log(type: .Info, tracelet.name ?? "unknown tracelet")
+    }
+    
+    
+    /// Sets the Channel to 5 or 9
+    /// - Parameter channel: channel 5 or 9
+    ///
+    public func setChannel(channel:Int8) async -> Bool {
+        let Uint8Channel: UInt8 = UInt8(bitPattern: channel)
+        let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetChannel, Uint8Channel]
+        var success = false
+        
+        if let tracelet = connectedTracelet {
+            success = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
+
+            logger.log(type: .Info, "Channel set to:  \(channel), Success:\(success)")
+        }
+
+        return success
     }
     
     
@@ -297,54 +309,50 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     // MARK: - getStatus()
-    //removed: completion: @escaping ((TL_StatusResponse) -> Void)
-    public func requestStatus() {
+
+    
+    public func getStatus() async -> TL_StatusResponse? {
+        guard generalState == STATE.CONNECTED else {
+            logger.log(type: .Error, "State is \(generalState)")
+            return nil
+        }
         logger.log(type: .Info, "Status requested")
-        
         let cmdByte = ProtocolConstants.cmdCodeGetStatus
         let data = Encoder.encodeByte(cmdByte)
-        
+
         if let tracelet = connectedTracelet {
             sendWithResponse(to: tracelet, data: data)
+            changeComState(changeTo: .WAITING_FOR_RESPONSE)
         }
-        
-        changeComState(changeTo: .WAITING_FOR_RESPONSE)
-        
-        
-        //        freezeBuffer { buffer in
-        //            for message in buffer {
-        //                print(self.getCmdByte(from: message.message))
-        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
-        //                    completion(TraceletResponse().GetStatusResponse(from: message.message))
-        //                    // If there are two status messages in the buffer, only the first will be returned.
-        //                    // Not sure if this is fine
-        //                    print("found status:  \(TraceletResponse().GetStatusResponse(from: message.message))")
-        //                    self.messageBuffer.removeAll()
-        //                }
-        //            }
-        //        }
+
+        let status = await getStatusFromBuffer()
+        logger.log(type: .Info, "Status response: \(String(describing: status))")
+        return status
     }
     
     
     
-    
-    //     public func getStatusString(completion: @escaping ((String) -> Void)) {
-    //
-    //        requestStatus { status in
-    //            let statusString =  """
-    //                                SiteID: \(status.siteIDe)\n \
-    //                                Battery Level: \(status.batteryLevel)\n \
-    //                                PosX: \(status.posX)
-    //                                """
-    //            print("statusString")
-    //            completion(statusString)
-    //        }
-    //    }
+    func getStatusFromBuffer() async -> TL_StatusResponse? {
+        
+        let buffer = await freezeBuffer()
+        var messageFound = false
+        for message in buffer {
+            if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
+                messageFound = true
+                let response = TraceletResponse().GetStatusResponse(from: message.message)
+                self.logger.log(type: .Info, "Message found in \n Buffer: [\(TraceletResponse().GetStatusResponse(from: message.message))]")
+                self.messageBuffer.removeAll()
+                return response
+            }
+        }
+        if !messageFound {
+            self.logger.log(type: .Warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
+            return nil
+        }
+    }
     
     // MARK: - getPosition()
-    
-    //removed:  completion: @escaping ((TL_PositionResponse) -> Void)
-    
+
     public func requestPosition() {
         
         logger.log(type: .Info, "Position requested")
@@ -361,19 +369,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
-        
-        //        freezeBuffer { buffer in
-        //            for message in buffer {
-        //                print(self.getCmdByte(from: message.message))
-        //                if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodePosition)  {
-        //                    completion(TraceletResponse().GetPositionResponse(from: message.message))
-        //                    // If there are two status messages in the buffer, only the first will be returned.
-        //                    // Not sure if this is fine
-        //                    print("Position found:  \(TraceletResponse().GetPositionResponse(from: message.message))")
-        //                    self.messageBuffer.removeAll()
-        //                }
-        //            }
-        //        }
+
     }
     
     
@@ -404,41 +400,46 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - getVersion()
-
-        public func requestVersion(completion: @escaping  ((String) -> Void)) {
-            logger.log(type: .Info, "Version requested")
     
-            guard generalState == STATE.CONNECTED else {
-                logger.log(type: .Error, "State is \(generalState)")
-                return
-            }
-    
-            let cmdByte = ProtocolConstants.cmdCodeGetVersion
-            let data = Encoder.encodeByte(cmdByte)
-    
-            if let tracelet = connectedTracelet {
-                sendWithResponse(to: tracelet, data: data)
-            }
-    
-            changeComState(changeTo: .WAITING_FOR_RESPONSE)
-    
-                    freezeBuffer { buffer in
-                        var messageFound = false
-                        for message in buffer {
-                            if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
-                                messageFound = true
-                                let response = TraceletResponse().getVersionResponse(from: message.message)
-                                completion(response.version)
-                                self.logger.log(type: .Info, "Message found in \n Buffer: [\(TraceletResponse().getVersionResponse(from: message.message))]")
-                                self.messageBuffer.removeAll()
-                            }
-                        }
-                        if !messageFound {
-                            self.logger.log(type: .Warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
-                        }
-                    }
+    /// Requests the firmware version from the tracelet (async)
+    /// - Returns: String
+    public func getVersion() async -> String? {
+        guard generalState == STATE.CONNECTED else {
+            logger.log(type: .Error, "State is \(generalState)")
+            return nil
         }
+        let cmdByte = ProtocolConstants.cmdCodeGetVersion
+        let data = Encoder.encodeByte(cmdByte)
+
+        if let tracelet = connectedTracelet {
+            sendWithResponse(to: tracelet, data: data)
+            changeComState(changeTo: .WAITING_FOR_RESPONSE)
+        }
+        let version = await getVersionFromBuffer()
+        logger.log(type: .Info, "Version response: \(String(describing: version))")
+        return version
+    }
     
+    
+    
+    func getVersionFromBuffer() async -> String? {
+        
+        let buffer = await freezeBuffer()
+        var messageFound = false
+        for message in buffer {
+            if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
+                messageFound = true
+                let response = TraceletResponse().getVersionResponse(from: message.message)
+                self.logger.log(type: .Info, "Message found in \n Buffer: [\(TraceletResponse().getVersionResponse(from: message.message))]")
+                self.messageBuffer.removeAll()
+                return response.version
+            }
+        }
+        if !messageFound {
+            self.logger.log(type: .Warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
+            return nil
+        }
+    }
     
     
     
@@ -451,26 +452,22 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
-        
-        
+
     }
     
-    
-    public func readFromBuffer() -> BufferElement {
-        // TBD -> Forced unwrap!
-        let firstElementInBuffer = messageBuffer.first!
-        messageBuffer.removeFirst()
-        return firstElementInBuffer
-    }
-    
+
     
     // Delay until buffer is frozen when requested
-    public func freezeBuffer(completion: @escaping (([BufferElement]) -> Void)) {
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let buffer = self.messageBuffer
-            completion(buffer)
+    public func freezeBuffer() async -> [BufferElement]  {
+        do {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+        } catch {
+            self.logger.log(type: .Warning, "Waiting time was cancelled.")
         }
+       
+        let buffer = self.messageBuffer
+        
+        return buffer
     }
     
     
@@ -587,7 +584,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         // Needs to be improved -> This should return a list of devices!
         // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
         
-        if (peripheral.name?.contains("dwTag") ?? false) {
+        if (peripheral.name?.contains("dwTag") ?? false || peripheral.name?.contains("dw3kTag") ?? false) {
             if discoveredTracelets.contains(peripheral)
             {
                 print ("already in list")
@@ -662,7 +659,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 }
                 else if characteristic.uuid == UUIDs.traceletRxChar {
                     logger.log(type: .Info, "Discovered characteristic: \(characteristic.uuid)")
+                    
+                    // Sending stop positioning directly after connection
+                    
                     stopPositioning()
+
+                    
                     rxCharacteristic = characteristic
                 }
             }
