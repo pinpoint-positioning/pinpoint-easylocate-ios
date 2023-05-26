@@ -220,8 +220,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func showMe(tracelet: CBPeripheral) {
         let cmdByte = ProtocolConstants.cmdCodeShowMe
         let data = Encoder.encodeByte(cmdByte)
-        send(to: tracelet, data: data)
-        logger.log(type: .Info, "ShowMe")
+        let result = send(to: tracelet, data: data)
+        logger.log(type: .Info, "ShowMe - \(result) ")
     }
     
     // MARK: - startPositioning()
@@ -233,8 +233,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
         let cmdByte = ProtocolConstants.cmdCodeStartPositioning
         let data = Encoder.encodeByte(cmdByte)
-        send(to: tracelet, data: data)
-        logger.log(type: .Info, tracelet.name ?? "unknown tracelet")
+        let result = send(to: tracelet, data: data)
+        logger.log(type: .Info, "Start Positioning - \(result)")
     }
     
     
@@ -248,8 +248,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
         let cmdByte = ProtocolConstants.cmdCodeStopPositioning
         let data = Encoder.encodeByte(cmdByte)
-        send(to: tracelet, data: data)
-        logger.log(type: .Info, tracelet.name ?? "unknown tracelet")
+        let result = send(to: tracelet, data: data)
+        logger.log(type: .Info,"Stop Positioning - \(result)")
     }
     
     
@@ -281,8 +281,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetPositioningInterval, Uint8Interval]
         
         if let tracelet = connectedTracelet {
-            send(to: tracelet, data: Encoder.encodeBytes(dataArray))
-            logger.log(type: .Info, "Interval set to:  \(interval)")
+            let result = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
+            logger.log(type: .Info, "Interval set to:  \(interval) - \(result)")
         }
     }
     
@@ -512,12 +512,11 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
-            location.continuation?.yield(TraceletResponse().GetPositionResponse(from: byteArray))
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
             allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n"
             
-            // Debug - Log to File"!!!!!!
-            positionLog.append(allResponses)
+            // Uncomment to log all positions
+            //logger.log(type: .Info, "Pos \(localPosition.xCoord) \(localPosition.yCoord)")
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeStatus)
