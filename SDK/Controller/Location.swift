@@ -5,12 +5,14 @@
 //  Created by Christoph Scherbeck on 27.04.23.
 //
 
+
+// In Progress
 import Foundation
 import CoreBluetooth
 
-public class AsyncLocationStream: NSObject {
+ class AsyncLocationStream: NSObject {
     
-    public static let shared = AsyncLocationStream()
+     static let shared = AsyncLocationStream()
 
     
     var continuation: AsyncStream<TL_PositionResponse>.Continuation?

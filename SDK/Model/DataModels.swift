@@ -20,6 +20,7 @@ public struct TL_PositionResponse:Equatable {
     public var covYy =  Double()
     public var siteID =  String()
     public var signature = String()
+    public var accuracy = Double()
     
 }
 

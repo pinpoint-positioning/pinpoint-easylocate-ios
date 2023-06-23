@@ -8,14 +8,14 @@
 import Foundation
 
 
-public class Encoder {
+ class Encoder {
     
     let logger = Logger()
 
   // TODO put encodeByte and encodeBytes together
 
   // Encode single byte
-  public static func encodeByte(_ byte: UInt8) -> Data {
+   static func encodeByte(_ byte: UInt8) -> Data {
     if byte == ProtocolConstants.startByte ||
         byte == ProtocolConstants.stopByte ||
         byte == ProtocolConstants.escapeByte {
@@ -33,7 +33,7 @@ public class Encoder {
   }
 
   // Encode byte array
-  public static func encodeBytes(_ bytes: [UInt8]) -> Data {
+   static func encodeBytes(_ bytes: [UInt8]) -> Data {
  
     var bytesAsHex = ""
     bytes.forEach { bytesAsHex.append(String(format: "%02hhx", $0)) }

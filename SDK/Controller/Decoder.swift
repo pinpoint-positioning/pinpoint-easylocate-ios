@@ -8,14 +8,14 @@
 import Foundation
 
 
-public class Decoder {
+ class Decoder {
     
-    public init() {}
+     init() {}
     lazy var byteArray = Data()
     lazy var decByteArray = [UInt8]()
     let logger = Logger()
     
-    public func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
+     func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
         
         //Reset array every run
         if (!decByteArray.isEmpty)

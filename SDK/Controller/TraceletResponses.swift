@@ -75,7 +75,14 @@ public class TraceletResponse {
         }
         
         
-        let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature)
+        let a = ((covXx + covYy) / 2);
+        let b = ((covXx  * covYy) - (covXy  * covXy));
+        let var1 = a + sqrt(a*a - b);
+        let var2 = a - sqrt(a*a - b);
+        let acc = sqrt(max(var1, var2)) / 10;
+
+        
+        let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
         
         //This will log all positions in the log file
         //logger.log(type: .Info, String(describing: response))
@@ -88,7 +95,7 @@ public class TraceletResponse {
     //MARK: - Get Satus Response
     
     
-    public func GetStatusResponse (from byteArray: Data) -> TL_StatusResponse {
+     func GetStatusResponse (from byteArray: Data) -> TL_StatusResponse {
         
         // Validate the message and remove start/endbyte
         var valByteArray = Decoder().ValidateMessage(of: byteArray)

@@ -9,15 +9,13 @@
 /* Begin PBXBuildFile section */
 		D119BC7F29D71FBC00E0BEF8 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = D119BC7E29D71FBC00E0BEF8 /* API.swift */; };
 		D143A3EB2A04FB76006E3FA8 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D143A3EA2A04FB76006E3FA8 /* Logger.swift */; };
+		D187BC572A3B10F7007FDBA2 /* SDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1FE236929C06E6B002F1049 /* SDK.framework */; platformFilter = ios; };
 		D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614329C1F9A700901DC5 /* Encoder.swift */; };
 		D18B614A29C343A600901DC5 /* States.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614929C343A600901DC5 /* States.swift */; };
-		D18B615329C4584000901DC5 /* SDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1FE236929C06E6B002F1049 /* SDK.framework */; };
 		D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615929C4589D00901DC5 /* Encoding.swift */; };
 		D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615B29C85CA200901DC5 /* TraceletResponses.swift */; };
 		D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615D29C85CFB00901DC5 /* DataModels.swift */; };
 		D19576C029F7A8040072576F /* GeoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19576BF29F7A8040072576F /* GeoTools.swift */; };
-		D1B56BB62A1232FC00C074F4 /* SiteFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B56BB52A1232FC00C074F4 /* SiteFileManager.swift */; };
-		D1B56BB92A1234C600C074F4 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = D1B56BB82A1234C600C074F4 /* ZIPFoundation */; };
 		D1BDBA9729FAAC2E00167E3F /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BDBA9629FAAC2E00167E3F /* Location.swift */; };
 		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
@@ -38,6 +36,19 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		D187BC552A3B0D72007FDBA2 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D1113C9C2A08ED65002C4B35 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D119BC7E29D71FBC00E0BEF8 /* API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
@@ -49,7 +60,6 @@
 		D18B615B29C85CA200901DC5 /* TraceletResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraceletResponses.swift; sourceTree = "<group>"; };
 		D18B615D29C85CFB00901DC5 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
 		D19576BF29F7A8040072576F /* GeoTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTools.swift; sourceTree = "<group>"; };
-		D1B56BB52A1232FC00C074F4 /* SiteFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteFileManager.swift; sourceTree = "<group>"; };
 		D1BDBA9629FAAC2E00167E3F /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,7 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D18B615329C4584000901DC5 /* SDK.framework in Frameworks */,
+				D187BC572A3B10F7007FDBA2 /* SDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,13 +84,19 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1B56BB92A1234C600C074F4 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D188ED9B2A3AF55700FCBF04 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		D18B615029C4584000901DC5 /* SDKTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -96,6 +112,7 @@
 				D1FE236B29C06E6B002F1049 /* SDK */,
 				D18B615029C4584000901DC5 /* SDKTests */,
 				D1FE236A29C06E6B002F1049 /* Products */,
+				D188ED9B2A3AF55700FCBF04 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -142,7 +159,6 @@
 				D19576BF29F7A8040072576F /* GeoTools.swift */,
 				D1BDBA9629FAAC2E00167E3F /* Location.swift */,
 				D143A3EA2A04FB76006E3FA8 /* Logger.swift */,
-				D1B56BB52A1232FC00C074F4 /* SiteFileManager.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -187,6 +203,7 @@
 				D1FE236529C06E6B002F1049 /* Sources */,
 				D1FE236629C06E6B002F1049 /* Frameworks */,
 				D1FE236729C06E6B002F1049 /* Resources */,
+				D187BC552A3B0D72007FDBA2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -194,7 +211,6 @@
 			);
 			name = SDK;
 			packageProductDependencies = (
-				D1B56BB82A1234C600C074F4 /* ZIPFoundation */,
 			);
 			productName = SDK;
 			productReference = D1FE236929C06E6B002F1049 /* SDK.framework */;
@@ -228,7 +244,6 @@
 			);
 			mainGroup = D1FE235F29C06E6B002F1049;
 			packageReferences = (
-				D1B56BB72A1234C600C074F4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			productRefGroup = D1FE236A29C06E6B002F1049 /* Products */;
 			projectDirPath = "";
@@ -271,7 +286,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1B56BB62A1232FC00C074F4 /* SiteFileManager.swift in Sources */,
 				D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */,
 				D1FE237929C06E8E002F1049 /* Strings.swift in Sources */,
 				D19576C029F7A8040072576F /* GeoTools.swift in Sources */,
@@ -337,6 +351,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -387,7 +402,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -400,6 +415,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -444,6 +460,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -479,6 +496,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = tech.scherbeck.ppsdk.SDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -511,6 +531,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = tech.scherbeck.ppsdk.SDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -548,25 +571,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		D1B56BB72A1234C600C074F4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/weichsel/ZIPFoundation";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.9.16;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		D1B56BB82A1234C600C074F4 /* ZIPFoundation */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D1B56BB72A1234C600C074F4 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
-			productName = ZIPFoundation;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D1FE236029C06E6B002F1049 /* Project object */;
 }
