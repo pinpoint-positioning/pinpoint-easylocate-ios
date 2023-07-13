@@ -10,13 +10,12 @@ import Foundation
 
  class Decoder {
     
-     init() {}
+    init() {}
     lazy var byteArray = Data()
     lazy var decByteArray = [UInt8]()
     let logger = Logger()
     
      func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
-        
         //Reset array every run
         if (!decByteArray.isEmpty)
         {
@@ -50,7 +49,32 @@ import Foundation
             }
             decByteArray.append(byte);
         }
-        
+    
+         //CRC Checksum - Release 11.2
+         let checksumMsg = decByteArray.suffix(2).reduce(0) { result, value in
+             let (sum, overflow) = result.addingReportingOverflow(Int(value))
+             if overflow {
+                 logger.log(type: .Warning, "Arithmetic Overflow")
+             }
+             return sum
+         }
+
+         let checksumCalc = Encoder.calcChecksum(decByteArray.dropLast(2)).reduce(0) { result, value in
+             let (sum, overflow) = result.addingReportingOverflow(Int(value))
+             if overflow {
+                 logger.log(type: .Warning, "Arithmetic Overflow")
+             }
+             return sum
+         }
+
+
+             guard checksumCalc == checksumMsg else {
+                 logger.log(type: .Error, "Checksums are not matching!")
+                 return []
+             }
+
+         
+         decByteArray.removeLast(2)
         return decByteArray
         
     }

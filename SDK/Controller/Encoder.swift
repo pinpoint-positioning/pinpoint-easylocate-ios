@@ -14,8 +14,36 @@ import Foundation
 
   // TODO put encodeByte and encodeBytes together
 
-  // Encode single byte
-   static func encodeByte(_ byte: UInt8) -> Data {
+     
+     // Encode single byte
+     // CRC Checksum included
+     
+         static func encodeByte(_ byte: UInt8) -> Data {
+             var encBytes = [UInt8]()
+
+             if byte == ProtocolConstants.startByte ||
+                 byte == ProtocolConstants.stopByte ||
+                 byte == ProtocolConstants.escapeByte {
+                 encBytes.append(ProtocolConstants.escapeByte)
+                 encBytes.append(ProtocolConstants.xorByte ^ byte)
+             } else {
+                 encBytes.append(byte)
+             }
+             let checksum = calcChecksum([byte])
+             encBytes.append(contentsOf: checksum)
+             encBytes.insert(ProtocolConstants.startByte, at: 0)
+             encBytes.append(ProtocolConstants.stopByte)
+             return Data(encBytes)
+         }
+     
+     
+     
+     
+  // Encode single byte - Not i use in API
+// NO CRC!
+     
+     
+   static func encodeByte_old(_ byte: UInt8) -> Data {
     if byte == ProtocolConstants.startByte ||
         byte == ProtocolConstants.stopByte ||
         byte == ProtocolConstants.escapeByte {
@@ -31,8 +59,14 @@ import Foundation
       return withUnsafeBytes(of: encodedByte) { Data($0) }
     }
   }
+     
+     
+     
+     
 
   // Encode byte array
+    // NO CRC Yet
+     // Maybe not even needed for tracelet
    static func encodeBytes(_ bytes: [UInt8]) -> Data {
  
     var bytesAsHex = ""
@@ -55,6 +89,10 @@ import Foundation
         encBytes.append($0)
       }
     }
+       
+    let checksum = calcChecksum(bytes)
+    
+    encBytes.append(contentsOf: checksum)
     encBytes.append(ProtocolConstants.stopByte)
 
     bytesAsHex = ""
@@ -64,6 +102,21 @@ import Foundation
     let encodedData = Data(encBytes)
     return encodedData
   }
+     
+     
+     
+     
+     
+     
+     static func calcChecksum(_ bytes: [UInt8]) -> [UInt8] {
+         var sum: UInt16 = 0
+         for byte in bytes {
+             sum += UInt16(byte)
+         }
+         let checksum = withUnsafeBytes(of: sum.littleEndian, Array.init)
+         return checksum
+     }
+     
 }
 
     
