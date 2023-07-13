@@ -12,7 +12,7 @@ import UIKit
 
 
 
- public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
+public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = API()
     let logger = Logger.shared
     
@@ -158,20 +158,73 @@ import UIKit
         logger.log(type: .Info, "Scan stopped")
     }
     
+    
+
+    
     // MARK: - Connect()
     
+
+//    public func connect(device: CBPeripheral) {
+//        logger.log(type: .Info, "Connection attempt initiated")
+//
+//        guard generalState != STATE.CONNECTED else {
+//            logger.log(type: .Warning, "Already connected")
+//            return
+//        }
+//        connectionSource = .regularConnect
+//        centralManager.connect(device, options: nil)
+//    }
+    
+    
+
+    public enum ConnectionSource {
+        case regularConnect
+        case connectAndStartPositioning
+    }
+    
+    public var connectionSource: ConnectionSource?
+    
+    
+    private var connectContinuation: CheckedContinuation<Bool, any Error>? = nil
     /// Starts a connection attempt to a nearby tracelet
     /// - Parameter device: Pass a discovered tracelet-object
-    public func connect(device: CBPeripheral) {
-        
+    public func connect(device: CBPeripheral) async throws -> Bool{
+        connectionSource = .regularConnect
+ 
         logger.log(type: .Info, "Connection attempt initiated")
-        
         guard generalState != STATE.CONNECTED else {
             logger.log(type: .Warning, "Already connected")
-            return
+            return false
         }
-        centralManager.connect(device, options: nil)
+        
+        return try await withCheckedThrowingContinuation { cont in
+            self.connectContinuation = cont
+            centralManager.connect(device, options: nil)
+        }
     }
+
+
+    
+    
+    
+    /// Starts a connection attempt to a nearby tracelet and starts positioning
+    /// - Parameter device: Pass a discovered tracelet-object
+    public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
+        connectionSource = .connectAndStartPositioning
+ 
+        logger.log(type: .Info, "Connection attempt initiated")
+        guard generalState != STATE.CONNECTED else {
+            logger.log(type: .Warning, "Already connected")
+            return false
+        }
+        
+        return try await withCheckedThrowingContinuation { cont in
+            self.connectContinuation = cont
+            centralManager.connect(device, options: nil)
+        }
+    }
+    
+    
     
     // MARK: - Disconnect()
     
@@ -274,10 +327,10 @@ import UIKit
         
         if let tracelet = connectedTracelet {
             success = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
-
+            
             logger.log(type: .Info, "Channel set to:  \(channel), Success:\(success)")
         }
-
+        
         return success
     }
     
@@ -319,7 +372,7 @@ import UIKit
     }
     
     // MARK: - getStatus()
-
+    
     
     /// Get the status of a connected tracelet
     /// - Returns: status object
@@ -331,12 +384,12 @@ import UIKit
         logger.log(type: .Info, "Status requested")
         let cmdByte = ProtocolConstants.cmdCodeGetStatus
         let data = Encoder.encodeByte(cmdByte)
-
+        
         if let tracelet = connectedTracelet {
             sendWithResponse(to: tracelet, data: data)
             changeComState(changeTo: .WAITING_FOR_RESPONSE)
         }
-
+        
         let status = await getStatusFromBuffer()
         logger.log(type: .Info, "Status response: \(String(describing: status))")
         return status
@@ -364,7 +417,7 @@ import UIKit
     }
     
     // MARK: - getPosition()
-
+    
     public func requestPosition() {
         
         logger.log(type: .Info, "Position requested")
@@ -381,7 +434,7 @@ import UIKit
         }
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
-
+        
     }
     
     
@@ -390,24 +443,14 @@ import UIKit
     // Sometimes RSSI returns max value 127. Excluded it for now.
     // Maybe include PowerTX Level- -> TBD
     
-    public func inProximity(_ RSSI: NSNumber) -> Bool {
+    private func inProximity(_ RSSI: NSNumber) -> Bool {
         if (RSSI.intValue > -50 && RSSI != 127){
             return true
         } else {
             return false
         }
     }
-    
-    
-    
-    /// Get the WGS84 Reference (In Progress)
-    /// - Returns: Wgs84Position
-//    public func getWgs84Position() async -> Double {
-//
-//        let wgsRef = Wgs84Reference().convertToWgs84(position: localPosition)
-//
-//        return wgsRef.lat
-//    }
+
     
     
     
@@ -422,7 +465,7 @@ import UIKit
         }
         let cmdByte = ProtocolConstants.cmdCodeGetVersion
         let data = Encoder.encodeByte(cmdByte)
-
+        
         if let tracelet = connectedTracelet {
             sendWithResponse(to: tracelet, data: data)
             changeComState(changeTo: .WAITING_FOR_RESPONSE)
@@ -464,10 +507,10 @@ import UIKit
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
-
+        
     }
     
-
+    
     
     // Delay until buffer is frozen when requested
     public func freezeBuffer() async -> [BufferElement]  {
@@ -476,7 +519,7 @@ import UIKit
         } catch {
             self.logger.log(type: .Warning, "Waiting time was cancelled.")
         }
-       
+        
         let buffer = self.messageBuffer
         
         return buffer
@@ -510,15 +553,12 @@ import UIKit
     
     // ###################### DEBUG END #########################
     
-    
-    
-    
+
     
     // MARK: - ClassifyResponse()
-    
-    var location = AsyncLocationStream.shared
+
     public func ClassifyResponse (from byteArray: Data)
-    
+
     {
         let valByteArray = Decoder().ValidateMessage(of: byteArray)
         
@@ -546,6 +586,7 @@ import UIKit
     }
     
     
+    
     public func getCmdByte(from data: Data) -> UInt8 {
         
         let valMesssage = Decoder().ValidateMessage(of: data)
@@ -556,7 +597,7 @@ import UIKit
     
     //MARK: - Delegate Functions
     
-     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
             bleState = BLE_State.BT_OK
@@ -589,7 +630,7 @@ import UIKit
     
     // Delegate - Called when scan has results
     
-     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         
         peripheral.delegate = self
         // Needs to be improved -> This should return a list of devices!
@@ -598,7 +639,7 @@ import UIKit
         if (peripheral.name?.contains("dwTag") ?? false || peripheral.name?.contains("dw3kTag") ?? false) {
             if discoveredTracelets.contains(peripheral)
             {
-                print ("already in list")
+                logger.log(type: .Info, "Tracelet already in list")
             } else {
                 logger.log(type: .Info, "Tracelet discovered")
                 discoveredTracelets.append(peripheral)
@@ -615,8 +656,11 @@ import UIKit
     
     // Delegate - Called when connection was successful
     
-     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+    public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         
+        // …
+
+
         // Set State
         generalState = STATE.CONNECTED
         stopScan()
@@ -633,7 +677,7 @@ import UIKit
     
     
     // Delegate - Called when services are discovered
-     public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         if let services = peripheral.services {
             for service in services {
                 
@@ -652,15 +696,15 @@ import UIKit
     
     // Delegate - Called when chars are discovered
     
-     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         if let characteristics = service.characteristics {
             for characteristic in characteristics {
-                
                 // Get Characteristics and store in vars
                 if characteristic.uuid == UUIDs.traceletTxChar {
                     logger.log(type: .Info, "Discovered characteristic: \(characteristic.uuid)")
-                    
+
                     if characteristic.properties.contains(.notify) {
+                        
                         // Moved to StartPositioning()
                         peripheral.setNotifyValue(true, for: characteristic)
                         changeComState(changeTo: .WAITING_FOR_RESPONSE)
@@ -669,14 +713,43 @@ import UIKit
                     }
                 }
                 else if characteristic.uuid == UUIDs.traceletRxChar {
+                    
+                    
                     logger.log(type: .Info, "Discovered characteristic: \(characteristic.uuid)")
-                    
-                    // Sending stop positioning directly after connection
-                    
-                    stopPositioning()
-
-                    
                     rxCharacteristic = characteristic
+                    
+                    switch connectionSource {
+                    case .regularConnect:
+
+                        logger.log(type: .Info, "Regular connect action")
+
+                        // If the RX Char is found, then continue the cont to return true to the connect-function
+                            if let cont = connectContinuation {
+                                cont.resume(returning: true)
+                                self.connectContinuation = nil
+                            }
+                        //StopPos on regular connect
+                        stopPositioning()
+                        
+                        
+                    case .connectAndStartPositioning:
+                        logger.log(type: .Info, "Connect and start positioning action")
+                        // If the TX Char is found, then continue the cont to return true to the connect-function
+                            if let cont = connectContinuation {
+                                cont.resume(returning: true)
+                                self.connectContinuation = nil
+                            }
+                        //StartPos on ConnectAndStartPositioning
+                        
+                        startPositioning()
+                        
+                        
+                    case .none:
+                        logger.log(type: .Warning, "Unkown connection action")
+                    }
+                    // Reset connection source
+                    connectionSource = nil
+  
                 }
             }
         }
@@ -687,15 +760,15 @@ import UIKit
     
     // Delegate - Called when char value has updated for defined char
     
-     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
-        
+    public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
         guard let data = characteristic.value else {
             // no data transmitted, handle if needed
             logger.log(type: .Warning, "No data received")
             return
         }
-
+        
         // Get TX  value
+
         if characteristic.uuid == UUIDs.traceletTxChar {
             
             switch comState {
@@ -712,7 +785,7 @@ import UIKit
     
     // Delegate - Called when disconnected
     // Improve: Reset all states
-     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+    public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         logger.log(type: .Info, "Disconnected tracelet: \(peripheral)")
         changeGeneralState(changeTo: .DISCONNECTED)
         
@@ -728,7 +801,19 @@ import UIKit
     
     //Failsafe Delegate Functions
     
-     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+    public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        
+        if let cont = connectContinuation {
+            if let error = error {
+                cont.resume(throwing: error)
+            } else {
+                cont.resume(returning: false)
+            }
+            
+            self.connectContinuation = nil
+        }
+        
+        
         allResponses = Strings.CONNECTION_FAILED
         logger.log(type: .Warning, "failed to connect")
         changeGeneralState(changeTo: .DISCONNECTED)
@@ -739,6 +824,9 @@ import UIKit
 
 
 
-
+public protocol ConnectionDelegate: AnyObject {
+    func connectionDidSucceed()
+    func connectionDidFail()
+}
 
 
