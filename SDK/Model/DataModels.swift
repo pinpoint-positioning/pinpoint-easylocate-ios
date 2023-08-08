@@ -107,20 +107,48 @@ public struct Wgs84Position {
 }
 
 
-public struct SiteData: Codable {
-    public var map: Map
-}
+public struct SiteData: Codable, Equatable {
 
-public struct Map:Codable {
-    public var mapFile: String
-    public var mapFileOriginX:Double
-    public var mapFileOriginY: Double
-    public var mapFileRes: Double
-    public var mapName: String
-    public var mapSiteId:String
-    public var originLatitude: Double
-    public var originLongitude: Double
-    public var originAzimuth:Double
-    public var uwbChannel: Int
+    
+    public var map = Map()
+    public var satlets = [Satlet]()
+    public var sitefileScheme = SitefileScheme()
+    
+    public init() {
+        // Initialize your properties here
+        self.map = Map()
+        self.satlets = []
+        self.sitefileScheme = SitefileScheme()
+    }
+
+    public struct Map: Codable, Equatable {
+        public var mapFile = ""
+        public var mapFileOriginX = 0.0
+        public var mapFileOriginY = 0.0
+        public var mapFileRes = 0.0
+        public var mapName = ""
+        public var mapSiteId = ""
+        public var originLatitude = 0.0
+        public var originLongitude = 0.0
+        public var originAzimuth = 0.0
+        public var uwbChannel = 0
+        
+
+    }
+
+    public struct Satlet: Codable, Equatable {
+        public var address = ""
+        public var isActive:Bool?
+        public var name = ""
+        public var panId = ""
+        public var slot = 0.0
+        public var xCoordinate = 0.0
+        public var yCoordinate = 0.0
+        public var zCoordinate = 0.0
+    }
+
+    public struct SitefileScheme: Codable, Equatable {
+        public var version = 0.0
+    }
 }
 
