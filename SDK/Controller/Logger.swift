@@ -1,17 +1,17 @@
 //Logger
    
-class Logger {
+public class Logger {
     
     public static let shared = Logger()
     
     
-    enum LogType {
+    public enum LogType {
         case Info
         case Warning
         case Error
     }
     
-    func log(type:LogType, _ message: String,functionName: String = #function) {
+    public func log(type:LogType, _ message: String,functionName: String = #function) {
         let date = Date()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
@@ -37,7 +37,7 @@ class Logger {
     
     
     
-     func clearLogFile() {
+    public func clearLogFile() {
         let documentDirectory = getDocumentsDirectory()
         let logFilePath = documentDirectory.appendingPathComponent("log.txt")
         do {

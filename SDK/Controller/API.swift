@@ -22,8 +22,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // Published vars
     // ### Debug only ###
-    @Published public var traceletInRange = false
-    @Published public var deviceName = ""
     public var positionLog = String()
     /// ### Debug End ###
     
@@ -162,19 +160,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
 
     
     // MARK: - Connect()
-    
 
-//    public func connect(device: CBPeripheral) {
-//        logger.log(type: .Info, "Connection attempt initiated")
-//
-//        guard generalState != STATE.CONNECTED else {
-//            logger.log(type: .Warning, "Already connected")
-//            return
-//        }
-//        connectionSource = .regularConnect
-//        centralManager.connect(device, options: nil)
-//    }
-    
     
 
     public enum ConnectionSource {
@@ -183,9 +169,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     public var connectionSource: ConnectionSource?
-    
-    
     private var connectContinuation: CheckedContinuation<Bool, any Error>? = nil
+    
     /// Starts a connection attempt to a nearby tracelet
     /// - Parameter device: Pass a discovered tracelet-object
     public func connect(device: CBPeripheral) async throws -> Bool{
@@ -511,11 +496,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     
-    
+    // ZEIT????
     // Delay until buffer is frozen when requested
+    
     public func freezeBuffer() async -> [BufferElement]  {
         do {
-            try await Task.sleep(nanoseconds: 1_000_000_000)
+            try await Task.sleep(nanoseconds: 500_000_000)
         } catch {
             self.logger.log(type: .Warning, "Waiting time was cancelled.")
         }
@@ -639,14 +625,17 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if (peripheral.name?.contains("dwTag") ?? false || peripheral.name?.contains("dw3kTag") ?? false) {
             if discoveredTracelets.contains(peripheral)
             {
-                logger.log(type: .Info, "Tracelet already in list")
+                logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") already in list")
             } else {
-                logger.log(type: .Info, "Tracelet discovered")
-                discoveredTracelets.append(peripheral)
+                logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") discovered")
+                if inProximity(RSSI) {
+                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") in range. RSSI: \(RSSI)")
+                    discoveredTracelets.append(peripheral)
+                }
+                
             }
             
-            //Set State
-            traceletInRange = true
+ 
             
         }
         
@@ -657,17 +646,11 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Delegate - Called when connection was successful
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        
-        // …
-
-
         // Set State
         generalState = STATE.CONNECTED
         stopScan()
         
         logger.log(type: .Info, "Connected to: \(String(describing: peripheral.name))")
-        
-        deviceName = peripheral.name ?? "unkown"
         connectedTracelet = peripheral
         // Discover UART Service
         peripheral.discoverServices([UUIDs.traceletNordicUARTService])
@@ -788,13 +771,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         logger.log(type: .Info, "Disconnected tracelet: \(peripheral)")
         changeGeneralState(changeTo: .DISCONNECTED)
-        
-        // #### Debug vars -> Only for testing ####
-        traceletInRange = false
-        deviceName = ""
-        // #### Debug vars end ####
-        
-        
         
     }
     
