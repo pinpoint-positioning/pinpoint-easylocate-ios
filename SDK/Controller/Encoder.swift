@@ -100,6 +100,8 @@ import Foundation
     print("Encoded data package: \(bytesAsHex)")
 
     let encodedData = Data(encBytes)
+       print ("sent")
+       print (encodedData)
     return encodedData
   }
      

@@ -128,9 +128,9 @@ public struct SiteData: Codable, Equatable {
         public var mapFileRes = 0.0
         public var mapName = ""
         public var mapSiteId = ""
-        public var originLatitude = 0.0
-        public var originLongitude = 0.0
-        public var originAzimuth = 0.0
+        public var originLatitude:Double?
+        public var originLongitude:Double?
+        public var originAzimuth:Double?
         public var uwbChannel = 0
         
 
@@ -150,5 +150,15 @@ public struct SiteData: Codable, Equatable {
     public struct SitefileScheme: Codable, Equatable {
         public var version = 0.0
     }
+    
+    
+    
+    
+    
+ 
+
+    
+    
+    
 }
 

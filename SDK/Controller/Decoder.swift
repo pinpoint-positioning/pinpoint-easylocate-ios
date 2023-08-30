@@ -70,7 +70,8 @@ import Foundation
 
              guard checksumCalc == checksumMsg else {
                  logger.log(type: .Error, "Checksums are not matching!")
-                 return []
+                 return [0]
+                 // test to avoid crrash
              }
 
          
