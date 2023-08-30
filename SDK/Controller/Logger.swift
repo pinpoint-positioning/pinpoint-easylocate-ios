@@ -4,6 +4,8 @@ public class Logger {
     
     public static let shared = Logger()
     
+    public init() {}
+    
     
     public enum LogType {
         case Info
@@ -48,7 +50,7 @@ public class Logger {
     }
     
     
-    func getDocumentsDirectory() -> URL {
+   public func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
     }

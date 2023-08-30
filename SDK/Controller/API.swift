@@ -44,6 +44,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     let decoder = Decoder()
     var rxCharacteristic: CBCharacteristic?
+    let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
     
     
     public override init() {
@@ -103,6 +104,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
+       
         logger.log(type: .Info, "Scan started (State: \(generalState))")
         
         guard bleState == .BT_OK else {
@@ -120,12 +122,15 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return
         }
         discoveredTracelets = []
+ 
         
         // Set State
         changeScanState(changeTo: .SCANNING)
+        // Added a delay so people have the chance to bring device closer to the phone before scanning starts
+
         
         //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
-        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: false)]
+        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: true)]
         
         //Initiate BT Scan
         centralManager.scanForPeripherals(withServices: nil, options: options)
@@ -429,7 +434,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Maybe include PowerTX Level- -> TBD
     
     private func inProximity(_ RSSI: NSNumber) -> Bool {
-        if (RSSI.intValue > -50 && RSSI != 127){
+        if (RSSI.intValue > -45 && RSSI != 127){
             return true
         } else {
             return false
@@ -616,30 +621,71 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // Delegate - Called when scan has results
     
-    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
+    
+    
+    
+    
+    
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
-        // Needs to be improved -> This should return a list of devices!
-        // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
         
-        if (peripheral.name?.contains("dwTag") ?? false || peripheral.name?.contains("dw3kTag") ?? false) {
-            if discoveredTracelets.contains(peripheral)
-            {
-                logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") already in list")
-            } else {
-                logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") discovered")
-                if inProximity(RSSI) {
-                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") in range. RSSI: \(RSSI)")
-                    discoveredTracelets.append(peripheral)
+        let localName = advertisementData["kCBAdvDataLocalName"]
+        if let peripheralName = localName {
+            if traceletNames.contains(where: { (peripheralName as AnyObject).contains($0) }) {
+                if discoveredTracelets.contains(peripheral) {
+                    print("Tracelet \(localName ?? "") already in list")
+                } else {
+               
+                    if inProximity(RSSI) {
+                        logger.log(type: .Info, "Tracelet \(localName ?? "") in range. RSSI: \(RSSI)")
+                    
+                        // Find the index where to insert the peripheral based on RSSI
+                        var insertIndex = 0
+                        for (index, existingPeripheral) in discoveredTracelets.enumerated() {
+                            if let existingRSSI = existingPeripheral.value(forKey: "RSSI") as? NSNumber {
+                                if RSSI.intValue > existingRSSI.intValue {
+                                    insertIndex = index + 1
+                                }
+                            }
+                        }
+                        
+                        // Insert the peripheral at the calculated index
+                        discoveredTracelets.insert(peripheral, at: insertIndex)
+                    }
                 }
-                
             }
-            
- 
-            
         }
-        
     }
+
+    
+    
+    // Old version no RSSI sorting
+    
+//    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+//
+//        peripheral.delegate = self
+//        // Needs to be improved -> This should return a list of devices!
+//        // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
+//
+//        if let peripheralName = peripheral.name {
+//            if traceletNames.contains(where: { peripheralName.contains($0) }) {
+//                if discoveredTracelets.contains(peripheral)
+//                {
+//                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") already in list")
+//                } else {
+//                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") discovered")
+//                    if inProximity(RSSI) {
+//                        logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") in range. RSSI: \(RSSI)")
+//                        discoveredTracelets.append(peripheral)
+//                    }
+//
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
     
     
     
@@ -729,6 +775,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                         
                     case .none:
                         logger.log(type: .Warning, "Unkown connection action")
+                       // self.connectContinuation = nil
                     }
                     // Reset connection source
                     connectionSource = nil
