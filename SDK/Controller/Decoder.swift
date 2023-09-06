@@ -21,7 +21,9 @@ import Foundation
         {
             decByteArray.removeAll()
         }
-        
+         if byteArray.isEmpty {
+             return [UInt8]()
+         }
         // Check if array has start byte
         if (byteArray[0] != ProtocolConstants.startByte)
         {

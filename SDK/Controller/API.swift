@@ -553,6 +553,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     {
         let valByteArray = Decoder().ValidateMessage(of: byteArray)
         
+        if byteArray.isEmpty {
+            return
+        }
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
