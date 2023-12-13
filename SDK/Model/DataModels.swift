@@ -96,15 +96,8 @@ public struct BufferElement
     public var message:Data
 }
 
-public struct Wgs84Position {
-   var lat: Double
-   var lon: Double
-   var alt: Double
-   var covXx:Double
-   var covXy:Double
-   var covYy:Double
-   var siteID:String
-}
+
+
 
 
 public struct SiteData: Codable, Equatable {
@@ -141,7 +134,7 @@ public struct SiteData: Codable, Equatable {
         public var isActive:Bool?
         public var name = ""
         public var panId = ""
-        public var slot = 0.0
+        public var slot:Double?
         public var xCoordinate = 0.0
         public var yCoordinate = 0.0
         public var zCoordinate = 0.0

@@ -132,15 +132,20 @@ public class TraceletResponse {
         // Get Bytes from Range
         
         let roleByte = Int8 (roleByteRange.littleEndian)
-        let address = addressRange.withUnsafeBytes({
-            (rawPtr: UnsafeRawBufferPointer) in
-            return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
-        let siteID = siteIDRange.withUnsafeBytes({
-            (rawPtr: UnsafeRawBufferPointer) in
-            return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
-        let panID = panRange.withUnsafeBytes({
-            (rawPtr: UnsafeRawBufferPointer) in
-            return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian,radix: 16))"})
+         
+         let address = addressRange.withUnsafeBytes({
+             (rawPtr: UnsafeRawBufferPointer) in
+             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
+//         let siteID = siteIDRange.withUnsafeBytes({
+//             (rawPtr: UnsafeRawBufferPointer) in
+//             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
+//         let panID = panRange.withUnsafeBytes({
+//             (rawPtr: UnsafeRawBufferPointer) in
+//             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
+         
+         let siteID = "0x\(String(format: "%04X", littleEndianUInt16(from: siteIDRange)))"
+         let panID = "0x\(String(format: "%04X", littleEndianUInt16(from: panRange)))"
+
         let posX = posXRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
@@ -183,7 +188,9 @@ public class TraceletResponse {
         return response
         
     }
-    
+    func littleEndianUInt16(from bytes: Array<UInt8>) -> UInt16 {
+        return UInt16(bytes[0]) | (UInt16(bytes[1]) << 8)
+    }
 
     
     
