@@ -104,7 +104,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
-       
+        
         logger.log(type: .Info, "Scan started (State: \(generalState))")
         
         guard bleState == .BT_OK else {
@@ -122,30 +122,31 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return
         }
         discoveredTracelets = []
- 
+        
         
         // Set State
         changeScanState(changeTo: .SCANNING)
         // Added a delay so people have the chance to bring device closer to the phone before scanning starts
-
         
-        //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
-        let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: true)]
-        
-        //Initiate BT Scan
-        centralManager.scanForPeripherals(withServices: nil, options: options)
-        
-        // Stop scan after timeout
-        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
-            self.stopScan()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            //Set to true, to continously searching for devices. Helpful when device is out of range and getting closer (RSSI)
+            let options: [String: Any] = [CBCentralManagerScanOptionAllowDuplicatesKey: NSNumber(value: true)]
             
-            if self.discoveredTracelets == [] {
-                self.logger.log(type: .Warning, "No tracelets discovered")
-                completion([])
-            } else {
-                self.logger.log(type: .Info, "Discovered tracelets: \(self.discoveredTracelets)")
+            //Initiate BT Scan
+            self.centralManager.scanForPeripherals(withServices: nil, options: options)
+            
+            // Stop scan after timeout
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
+                self.stopScan()
+                
+                if self.discoveredTracelets == [] {
+                    self.logger.log(type: .Warning, "No tracelets discovered")
+                    completion([])
+                } else {
+                    self.logger.log(type: .Info, "Discovered tracelets: \(self.discoveredTracelets)")
+                }
+                completion(self.discoveredTracelets)
             }
-            completion(self.discoveredTracelets)
         }
     }
     
@@ -556,10 +557,14 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if byteArray.isEmpty {
             return
         }
+        print(byteArray.description)
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
+            // let wgs = WGS84Position(refLatitude: 50.822892143362516, refLongitude: 12.921438924334744, refAzimuth: 216.6112587721007).getWGS84Position(uwbPosition: CGPoint(x: localPosition.xCoord, y: localPosition.yCoord))
+            //print(wgs)
             allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n"
+            print("X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n")
             
             // Uncomment to log all positions
             //logger.log(type: .Info, "Pos \(localPosition.xCoord) \(localPosition.yCoord)")
@@ -581,12 +586,19 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-    public func getCmdByte(from data: Data) -> UInt8 {
-        
+    public func getCmdByte(from data: Data) -> UInt8? {
         let valMesssage = Decoder().ValidateMessage(of: data)
-        return valMesssage[0]
         
+        // Check if the valMesssage array is not empty and the index is within bounds
+        if !valMesssage.isEmpty{
+            return valMesssage[0]
+        } else {
+            logger.log(type: .Warning, "No command byte found")
+            
+            return nil
+        }
     }
+
     
     
     //MARK: - Delegate Functions
@@ -774,6 +786,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                         //StartPos on ConnectAndStartPositioning
                         
                         startPositioning()
+
                         
                         
                     case .none:

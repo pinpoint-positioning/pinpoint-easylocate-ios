@@ -16,6 +16,7 @@
 		D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615B29C85CA200901DC5 /* TraceletResponses.swift */; };
 		D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B615D29C85CFB00901DC5 /* DataModels.swift */; };
 		D19576C029F7A8040072576F /* GeoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19576BF29F7A8040072576F /* GeoTools.swift */; };
+		D1AD9CA62B288C5600661C3D /* GeoTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1AD9CA52B288C5600661C3D /* GeoTools.swift */; };
 		D1BDBA9729FAAC2E00167E3F /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1BDBA9629FAAC2E00167E3F /* Location.swift */; };
 		D1F63A9729C0B21D00FC1A06 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D1F63A9629C0B21D00FC1A06 /* README.md */; };
 		D1FE236E29C06E6B002F1049 /* SDK.docc in Sources */ = {isa = PBXBuildFile; fileRef = D1FE236D29C06E6B002F1049 /* SDK.docc */; };
@@ -60,6 +61,7 @@
 		D18B615B29C85CA200901DC5 /* TraceletResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TraceletResponses.swift; sourceTree = "<group>"; };
 		D18B615D29C85CFB00901DC5 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
 		D19576BF29F7A8040072576F /* GeoTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTools.swift; sourceTree = "<group>"; };
+		D1AD9CA52B288C5600661C3D /* GeoTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTools.swift; sourceTree = "<group>"; };
 		D1BDBA9629FAAC2E00167E3F /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
 		D1F63A9629C0B21D00FC1A06 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1FE236929C06E6B002F1049 /* SDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -101,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				D18B615929C4589D00901DC5 /* Encoding.swift */,
+				D1AD9CA52B288C5600661C3D /* GeoTools.swift */,
 			);
 			path = SDKTests;
 			sourceTree = "<group>";
@@ -279,6 +282,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D18B615A29C4589D00901DC5 /* Encoding.swift in Sources */,
+				D1AD9CA62B288C5600661C3D /* GeoTools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
