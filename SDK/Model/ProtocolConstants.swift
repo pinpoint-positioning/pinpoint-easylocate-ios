@@ -31,6 +31,7 @@ public struct ProtocolConstants {
     public static let cmdCodeSetMotionCheckIntervalResponse:UInt8 = 0xa4
     public static let cmdCodeSetPositioningInterval:UInt8 = 0x23
     public static let cmdCodeSetChannel:UInt8 = 0x27
+    public static let cmdCodeSetSiteID:UInt8 = 0x25
     
     
     
