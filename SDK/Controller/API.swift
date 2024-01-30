@@ -326,6 +326,40 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     
+    /// Sets the SiteID to listen to
+    /// - Parameter channel: siteID eg. 0x0001
+    public func setSiteID(siteID: UInt16) async -> Bool {
+        var success = false
+        // Ensure that siteID is within the range of UInt16
+        guard siteID <= UInt16(Int16.max) else {
+            logger.log(type: .Error, "siteID is not a valid UInt16 value")
+            return false  // Return false if siteID is out of range
+        }
+
+        let dataArray: [UInt16] = [UInt16(ProtocolConstants.cmdCodeSetSiteID), siteID]
+        
+        // Convert UInt16 array to UInt8 array
+ 
+         var uint8Array = [UInt8]()
+         for value in dataArray {
+             withUnsafeBytes(of: value) { uint8Array.append(contentsOf: $0) }
+         }
+        logger.log(type: .Info, "Sent: \(uint8Array)")
+        
+        
+        if let tracelet = connectedTracelet {
+            success = send(to: tracelet, data: Encoder.encodeBytes(uint8Array))
+           
+            logger.log(type: .Info, "SiteID set to: \(String(siteID, radix: 16)), Success: \(success)")
+        } else {
+            success = false
+            logger.log(type: .Error, "No Tracelet connected")
+        }
+        
+        return success
+    }
+
+    
     
     
     /// Sets a positioning interval
