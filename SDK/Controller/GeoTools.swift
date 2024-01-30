@@ -24,9 +24,9 @@ public class WGS84Position {
 
     public func getWGS84Position(uwbPosition: CGPoint) -> CLLocationCoordinate2D {
         let radiusLat = 1 / sqrt(1 / pow(equatorialRadius, 2) +
-                                 pow(tan(refLatitudeRadians), 2) / pow(polarRadius, 2))
-        let deltaX = uwbPosition.x + uwbPosition.y * cos(refAzimuthRadians)
-        let deltaY = -uwbPosition.x * sin(refAzimuthRadians) + uwbPosition.y * cos(refAzimuthRadians)
+                                 pow(tan(Double(refLatitudeRadians)), 2) / pow(polarRadius, 2))
+        let deltaX = uwbPosition.x * cos(Double(refAzimuthRadians)) + uwbPosition.y  * sin(Double(refAzimuthRadians))
+        let deltaY = -uwbPosition.x * sin(Double(refAzimuthRadians)) + uwbPosition.y * cos(Double(refAzimuthRadians))
         let deltaLon = 360.0 * deltaX / (2 * Double.pi * radiusLat)
         let deltaLat = 360.0 * deltaY / (2 * Double.pi * meanRadius)
 
