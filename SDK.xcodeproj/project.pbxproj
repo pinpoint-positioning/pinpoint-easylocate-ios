@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D119BC7F29D71FBC00E0BEF8 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = D119BC7E29D71FBC00E0BEF8 /* API.swift */; };
-		D143A3EB2A04FB76006E3FA8 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D143A3EA2A04FB76006E3FA8 /* Logger.swift */; };
+		D143A3EB2A04FB76006E3FA8 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D143A3EA2A04FB76006E3FA8 /* Logging.swift */; };
 		D187BC572A3B10F7007FDBA2 /* SDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1FE236929C06E6B002F1049 /* SDK.framework */; platformFilter = ios; };
 		D18B614429C1F9A700901DC5 /* Encoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614329C1F9A700901DC5 /* Encoder.swift */; };
 		D18B614A29C343A600901DC5 /* States.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18B614929C343A600901DC5 /* States.swift */; };
@@ -53,7 +53,7 @@
 /* Begin PBXFileReference section */
 		D1113C9C2A08ED65002C4B35 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D119BC7E29D71FBC00E0BEF8 /* API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
-		D143A3EA2A04FB76006E3FA8 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		D143A3EA2A04FB76006E3FA8 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		D18B614329C1F9A700901DC5 /* Encoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encoder.swift; sourceTree = "<group>"; };
 		D18B614929C343A600901DC5 /* States.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = States.swift; sourceTree = "<group>"; };
 		D18B614F29C4584000901DC5 /* SDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -161,7 +161,7 @@
 				D18B615B29C85CA200901DC5 /* TraceletResponses.swift */,
 				D19576BF29F7A8040072576F /* GeoTools.swift */,
 				D1BDBA9629FAAC2E00167E3F /* Location.swift */,
-				D143A3EA2A04FB76006E3FA8 /* Logger.swift */,
+				D143A3EA2A04FB76006E3FA8 /* Logging.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -298,7 +298,7 @@
 				D18B615C29C85CA200901DC5 /* TraceletResponses.swift in Sources */,
 				D18B614A29C343A600901DC5 /* States.swift in Sources */,
 				D1FE237A29C06E8E002F1049 /* UUUIDs.swift in Sources */,
-				D143A3EB2A04FB76006E3FA8 /* Logger.swift in Sources */,
+				D143A3EB2A04FB76006E3FA8 /* Logging.swift in Sources */,
 				D18B615E29C85CFB00901DC5 /* DataModels.swift in Sources */,
 				D1FE237D29C06EB0002F1049 /* Decoder.swift in Sources */,
 				D1BDBA9729FAAC2E00167E3F /* Location.swift in Sources */,
