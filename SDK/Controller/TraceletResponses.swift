@@ -12,7 +12,7 @@ public class TraceletResponse {
     
     public init () {}
     
-    let logger = Logger()
+    let logger = Logging()
     
     //MARK: - Get Position Response
     
@@ -83,9 +83,6 @@ public class TraceletResponse {
 
         
         let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
-        
-        //This will log all positions in the log file
-        //logger.log(type: .Info, String(describing: response))
         return response
         
     }
@@ -136,13 +133,6 @@ public class TraceletResponse {
          let address = addressRange.withUnsafeBytes({
              (rawPtr: UnsafeRawBufferPointer) in
              return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
-//         let siteID = siteIDRange.withUnsafeBytes({
-//             (rawPtr: UnsafeRawBufferPointer) in
-//             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
-//         let panID = panRange.withUnsafeBytes({
-//             (rawPtr: UnsafeRawBufferPointer) in
-//             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
-         
          let siteID = "0x\(String(format: "%04X", littleEndianUInt16(from: siteIDRange)))"
          let panID = "0x\(String(format: "%04X", littleEndianUInt16(from: panRange)))"
 
@@ -204,7 +194,7 @@ public class TraceletResponse {
             let versionString = String(decoding: valByteArray, as: UTF8.self)
             return TL_VersionResponse(version: versionString)
         } else {
-            logger.log(type: .Warning, "Received unknown response to version request")
+            logger.log(type: .warning, "Received unknown response to version request")
             return TL_VersionResponse(version: "")
         }
         

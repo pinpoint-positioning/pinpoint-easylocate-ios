@@ -10,7 +10,7 @@ import Foundation
 
  class Encoder {
     
-    let logger = Logger()
+    let logger = Logging()
 
   // TODO put encodeByte and encodeBytes together
 

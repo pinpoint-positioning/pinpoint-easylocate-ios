@@ -13,7 +13,7 @@ import Foundation
     init() {}
     lazy var byteArray = Data()
     lazy var decByteArray = [UInt8]()
-    let logger = Logger()
+    let logger = Logging()
     
      func ValidateMessage(of byteArray:Data ) -> [UInt8]   {
         //Reset array every run
@@ -27,13 +27,13 @@ import Foundation
         // Check if array has start byte
         if (byteArray[0] != ProtocolConstants.startByte)
         {
-            logger.log(type: .Warning, "No Start Byte")
+            logger.log(type: .warning, "No Start Byte")
         }
         //Check if array has end byte
         //CAREFUL: Is forced unwrapped - TBD
         if (byteArray.last! != ProtocolConstants.stopByte)
         {
-            logger.log (type: .Warning, "No Stop Byte")
+            logger.log (type: .warning, "No Stop Byte")
         }
         
         //Remove start byte
@@ -56,7 +56,7 @@ import Foundation
          let checksumMsg = decByteArray.suffix(2).reduce(0) { result, value in
              let (sum, overflow) = result.addingReportingOverflow(Int(value))
              if overflow {
-                 logger.log(type: .Warning, "Arithmetic Overflow")
+                 logger.log(type: .warning, "Arithmetic Overflow")
              }
              return sum
          }
@@ -64,14 +64,14 @@ import Foundation
          let checksumCalc = Encoder.calcChecksum(decByteArray.dropLast(2)).reduce(0) { result, value in
              let (sum, overflow) = result.addingReportingOverflow(Int(value))
              if overflow {
-                 logger.log(type: .Warning, "Arithmetic Overflow")
+                 logger.log(type: .warning, "Arithmetic Overflow")
              }
              return sum
          }
 
 
              guard checksumCalc == checksumMsg else {
-                 logger.log(type: .Error, "Checksums are not matching!")
+                 logger.log(type: .error, "Checksums are not matching!")
                  return [0]
                  // test to avoid crrash
              }

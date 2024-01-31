@@ -9,21 +9,13 @@ import Foundation
 import CoreBluetooth
 import Combine
 import UIKit
+import SwiftUI
 
 
 
 public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = API()
-    let logger = Logger.shared
-    
-    
-    // Properties
-    @Published public var allResponses = String()
-    
-    // Published vars
-    // ### Debug only ###
-    public var positionLog = String()
-    /// ### Debug End ###
+    let logger = Logging.shared
     
     @Published public var generalState:STATE = .DISCONNECTED
     @Published public var scanState:STATE = .IDLE
@@ -33,15 +25,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     @Published public var localPosition = TL_PositionResponse()
     @Published public var status = TL_StatusResponse()
     @Published public var version = TL_VersionResponse()
-    var discoveredTracelets = [CBPeripheral]()
+    
     @Published public var connectedTracelet: CBPeripheral?
-    
-    private var response:Data?
-    // Buffer
+    @Published public var logPositions:Bool = false
+
     public var messageBuffer = [BufferElement]()
-    
+    var discoveredTracelets = [CBPeripheral]()
     var centralManager: CBCentralManager!
-    
     let decoder = Decoder()
     var rxCharacteristic: CBCharacteristic?
     let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
@@ -51,49 +41,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
         centralManager.delegate = self
-        logger.log(type: .Info, "SDK initiated: \n  BT-state: \(centralManager.state)")
+        logger.log(type: .info, "SDK initiated: \n  BT-state: \(centralManager.state)")
     }
-    
-    
-    
-    
-    //    // MARK: - ScanForDevices()
-    //
-    //    public func scanForBluetoothDevices() -> [CBPeripheral] {
-    //        var discoveredPeripherals: [CBPeripheral] = []
-    //       // let centralManager = CBCentralManager()
-    //
-    //        centralManager.scanForPeripherals(withServices: nil, options: nil)
-    //
-    //        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-    //            self.centralManager.stopScan()
-    //        }
-    //
-    //        while centralManager.isScanning {
-    //            RunLoop.current.run(mode: .default, before: .distantFuture)
-    //        }
-    //
-    //        discoveredPeripherals = centralManager.retrievePeripherals(withIdentifiers: [])
-    //        return discoveredPeripherals
-    //    }
-    //
-    //
-    //    // MARK: - Scan()
-    //
-    //
-    //    public func scanForBluetoothDevices() async throws -> [CBPeripheral] {
-    //        let manager = CBCentralManager()
-    //
-    //
-    //        return try await withCheckedThrowingContinuation { continuation in
-    //            let peripherals = manager.retrievePeripherals(withIdentifiers:[])
-    //            continuation.resume(returning: peripherals)
-    //        }
-    //    }
-    //
-    
-    
-    
+  
     
     
     // MARK: - Scan()
@@ -105,20 +55,20 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
         
-        logger.log(type: .Info, "Scan started (State: \(generalState))")
+        logger.log(type: .info, "Scan started (State: \(generalState))")
         
         guard bleState == .BT_OK else {
-            logger.log(type: .Error, "Bluetooth not available: \(bleState)")
+            logger.log(type: .error, "Bluetooth not available: \(bleState)")
             return
         }
         
         guard !centralManager.isScanning else {
-            logger.log(type: .Error, "Scan not started: Scan already running")
+            logger.log(type: .error, "Scan not started: Scan already running")
             return
         }
         guard generalState == STATE.DISCONNECTED else {
             
-            logger.log(type: .Error, "Scan not started: State was: \(generalState)")
+            logger.log(type: .error, "Scan not started: State was: \(generalState)")
             return
         }
         discoveredTracelets = []
@@ -140,10 +90,10 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 self.stopScan()
                 
                 if self.discoveredTracelets == [] {
-                    self.logger.log(type: .Warning, "No tracelets discovered")
+                    self.logger.log(type: .warning, "No tracelets discovered")
                     completion([])
                 } else {
-                    self.logger.log(type: .Info, "Discovered tracelets: \(self.discoveredTracelets)")
+                    self.logger.log(type: .info, "Discovered tracelets: \(self.discoveredTracelets)")
                 }
                 completion(self.discoveredTracelets)
             }
@@ -159,7 +109,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func stopScan() {
         centralManager.stopScan()
         changeScanState(changeTo: .IDLE)
-        logger.log(type: .Info, "Scan stopped")
+        logger.log(type: .info, "Scan stopped")
     }
     
     
@@ -182,9 +132,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func connect(device: CBPeripheral) async throws -> Bool{
         connectionSource = .regularConnect
  
-        logger.log(type: .Info, "Connection attempt initiated")
+        logger.log(type: .info, "Connection attempt initiated")
         guard generalState != STATE.CONNECTED else {
-            logger.log(type: .Warning, "Already connected")
+            logger.log(type: .warning, "Already connected")
             return false
         }
         
@@ -203,9 +153,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
         connectionSource = .connectAndStartPositioning
  
-        logger.log(type: .Info, "Connection attempt initiated")
+        logger.log(type: .info, "Connection attempt initiated")
         guard generalState != STATE.CONNECTED else {
-            logger.log(type: .Warning, "Already connected")
+            logger.log(type: .warning, "Already connected")
             return false
         }
         
@@ -221,7 +171,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     /// Disconnects from a tracelet
     public func disconnect() {
-        logger.log(type: .Info, "start disconnecting")
+        logger.log(type: .info, "start disconnecting")
         if let tracelet = connectedTracelet {
             centralManager.cancelPeripheralConnection(tracelet)
         }
@@ -240,7 +190,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     func send(to tracelet: CBPeripheral, data: Data) -> Bool {
         var success = false
         guard generalState == STATE.CONNECTED else {
-            logger.log(type: .Error, "State must be CONNECTED to use send()")
+            logger.log(type: .error, "State must be CONNECTED to use send()")
             return success
         }
         if let rxCharacteristic = rxCharacteristic {
@@ -256,7 +206,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
         guard generalState == STATE.CONNECTED else {
-            logger.log(type: .Error, "State must be CONNECTED to use send()")
+            logger.log(type: .error, "State must be CONNECTED to use send()")
             return
         }
         
@@ -269,14 +219,28 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - ShowMe()
-    
+
     /// Sends a ShowMe -command to the tracelet
     /// - Parameter tracelet: pass a connected tracelet object
-    public func showMe(tracelet: CBPeripheral) {
+    public func showMe(tracelet: CBPeripheral? = nil) {
+        var device: CBPeripheral?
+
+        if tracelet == nil {
+            device = connectedTracelet
+        } else {
+            device = tracelet
+        }
+
+        guard let selectedDevice = device else {
+            // Handle the case where no tracelet is available
+            logger.log(type: .error, "No tracelet available.")
+            return
+        }
+
         let cmdByte = ProtocolConstants.cmdCodeShowMe
         let data = Encoder.encodeByte(cmdByte)
-        let result = send(to: tracelet, data: data)
-        logger.log(type: .Info, "ShowMe - \(result) ")
+        let result = send(to: selectedDevice, data: data)
+        logger.log(type: .info, "ShowMe - \(result) ")
     }
     
     // MARK: - startPositioning()
@@ -284,13 +248,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     /// Sends the command to start the UWB-positioning to the tracelet
     public func startPositioning() {
         guard let tracelet = connectedTracelet else {
-            logger.log(type: .Error, "No tracelet connected")
+            logger.log(type: .error, "No tracelet connected")
             return
         }
         let cmdByte = ProtocolConstants.cmdCodeStartPositioning
         let data = Encoder.encodeByte(cmdByte)
         let result = send(to: tracelet, data: data)
-        logger.log(type: .Info, "Start Positioning - \(result)")
+        logger.log(type: .info, "Start Positioning - \(result)")
     }
     
     
@@ -305,7 +269,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         let cmdByte = ProtocolConstants.cmdCodeStopPositioning
         let data = Encoder.encodeByte(cmdByte)
         let result = send(to: tracelet, data: data)
-        logger.log(type: .Info,"Stop Positioning - \(result)")
+        logger.log(type: .info,"Stop Positioning - \(result)")
     }
     
     
@@ -319,7 +283,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if let tracelet = connectedTracelet {
             success = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
             
-            logger.log(type: .Info, "Channel set to:  \(channel), Success:\(success)")
+            logger.log(type: .info, "Channel set to:  \(channel), Success:\(success)")
         }
         
         return success
@@ -332,7 +296,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         var success = false
         // Ensure that siteID is within the range of UInt16
         guard siteID <= UInt16(Int16.max) else {
-            logger.log(type: .Error, "siteID is not a valid UInt16 value")
+            logger.log(type: .error, "siteID is not a valid UInt16 value")
             return false  // Return false if siteID is out of range
         }
 
@@ -344,22 +308,21 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
          for value in dataArray {
              withUnsafeBytes(of: value) { uint8Array.append(contentsOf: $0) }
          }
-        logger.log(type: .Info, "Sent: \(uint8Array)")
+        logger.log(type: .info, "Sent: \(uint8Array)")
         
         
         if let tracelet = connectedTracelet {
             success = send(to: tracelet, data: Encoder.encodeBytes(uint8Array))
            
-            logger.log(type: .Info, "SiteID set to: \(String(siteID, radix: 16)), Success: \(success)")
+            logger.log(type: .info, "SiteID set to: \(String(siteID, radix: 16)), Success: \(success)")
         } else {
             success = false
-            logger.log(type: .Error, "No Tracelet connected")
+            logger.log(type: .error, "No Tracelet connected")
         }
         
         return success
     }
 
-    
     
     
     /// Sets a positioning interval
@@ -370,7 +333,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         if let tracelet = connectedTracelet {
             let result = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
-            logger.log(type: .Info, "Interval set to:  \(interval) - \(result)")
+            logger.log(type: .info, "Interval set to:  \(interval) - \(result)")
         }
     }
     
@@ -403,10 +366,10 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     /// - Returns: status object
     public func getStatus() async -> TL_StatusResponse? {
         guard generalState == STATE.CONNECTED else {
-            logger.log(type: .Error, "State is \(generalState)")
+            logger.log(type: .error, "State is \(generalState)")
             return nil
         }
-        logger.log(type: .Info, "Status requested")
+        logger.log(type: .info, "Status requested")
         let cmdByte = ProtocolConstants.cmdCodeGetStatus
         let data = Encoder.encodeByte(cmdByte)
         
@@ -416,7 +379,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
         
         let status = await getStatusFromBuffer()
-        logger.log(type: .Info, "Status response: \(String(describing: status))")
+        logger.log(type: .info, "Status response: \(String(describing: status))")
         return status
     }
     
@@ -430,13 +393,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
                 messageFound = true
                 let response = TraceletResponse().GetStatusResponse(from: message.message)
-                self.logger.log(type: .Info, "Message found in \n Buffer: [\(TraceletResponse().GetStatusResponse(from: message.message))]")
+                self.logger.log(type: .info, "Message found in \n Buffer: [\(TraceletResponse().GetStatusResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return response
             }
         }
         if !messageFound {
-            self.logger.log(type: .Warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
+            self.logger.log(type: .warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
             return nil
         }
     }
@@ -445,9 +408,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     public func requestPosition() {
         
-        logger.log(type: .Info, "Position requested")
+        logger.log(type: .info, "Position requested")
         guard generalState == STATE.CONNECTED else {
-            logger.log(type: .Error, "State is \(generalState)")
+            logger.log(type: .error, "State is \(generalState)")
             return
         }
         
@@ -461,7 +424,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
         
     }
-    
     
     
     // Use RSSI to connect only when close ( > -50 db).
@@ -485,7 +447,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     /// - Returns: String
     public func getVersion() async -> String? {
         guard generalState == STATE.CONNECTED else {
-            logger.log(type: .Error, "State is \(generalState)")
+            logger.log(type: .error, "State is \(generalState)")
             return nil
         }
         let cmdByte = ProtocolConstants.cmdCodeGetVersion
@@ -496,7 +458,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             changeComState(changeTo: .WAITING_FOR_RESPONSE)
         }
         let version = await getVersionFromBuffer()
-        logger.log(type: .Info, "Version response: \(String(describing: version))")
+        logger.log(type: .info, "Version response: \(String(describing: version))")
         return version
     }
     
@@ -510,13 +472,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
                 messageFound = true
                 let response = TraceletResponse().getVersionResponse(from: message.message)
-                self.logger.log(type: .Info, "Message found in \n Buffer: [\(TraceletResponse().getVersionResponse(from: message.message))]")
+                self.logger.log(type: .info, "Message found in \n Buffer: [\(TraceletResponse().getVersionResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return response.version
             }
         }
         if !messageFound {
-            self.logger.log(type: .Warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
+            self.logger.log(type: .warning, "Message not found in buffer\n Buffer: [\(buffer.description)]")
             return nil
         }
     }
@@ -543,7 +505,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         do {
             try await Task.sleep(nanoseconds: 500_000_000)
         } catch {
-            self.logger.log(type: .Warning, "Waiting time was cancelled.")
+            self.logger.log(type: .warning, "Waiting time was cancelled.")
         }
         
         let buffer = self.messageBuffer
@@ -551,36 +513,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         return buffer
     }
     
-    
-    // MARK: - Debug - Logger
-    // ###################### DEBUG #########################
-    // Only for Debug -> Save logged data to file
-    
-    public func openDir() {
-        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let filename = getDocumentsDirectory().appendingPathComponent("positionLog\(Date()).txt")
-        
-        if let sharedUrl = URL(string: "shareddocuments://\(documentsUrl.path)") {
-            if UIApplication.shared.canOpenURL(sharedUrl) {
-                UIApplication.shared.open(filename, options: [:])
-            }
-        }
-    }
-    
-    func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
-    }
-    
-    public func clearLogFile () {
-        logger.clearLogFile()
-    }
-    
-    
-    // ###################### DEBUG END #########################
-    
 
-    
     // MARK: - ClassifyResponse()
 
     public func ClassifyResponse (from byteArray: Data)
@@ -591,29 +524,25 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if byteArray.isEmpty {
             return
         }
-        print(byteArray.description)
+
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
-            // let wgs = WGS84Position(refLatitude: 50.822892143362516, refLongitude: 12.921438924334744, refAzimuth: 216.6112587721007).getWGS84Position(uwbPosition: CGPoint(x: localPosition.xCoord, y: localPosition.yCoord))
-            //print(wgs)
-            allResponses = "X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n"
-            print("X: \(localPosition.xCoord) Y: \(localPosition.yCoord) Z: \(localPosition.zCoord) \n")
-            
-            // Uncomment to log all positions
-            //logger.log(type: .Info, "Pos \(localPosition.xCoord) \(localPosition.yCoord)")
+
+            //log all positions
+            if logPositions {
+                logger.log(type: .info, "X: \(localPosition.xCoord) y: \(localPosition.yCoord)")
+            }
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeStatus)
         {
             status =  TraceletResponse().GetStatusResponse(from: byteArray)
-            allResponses = "role: \(status.role) panID: \(status.panID) site: \(status.siteIDe)\n"
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion)
         {
             version =  TraceletResponse().getVersionResponse(from: byteArray)
-            allResponses = "version: \(version.version)\n\n"
         }
         
     }
@@ -627,8 +556,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         if !valMesssage.isEmpty{
             return valMesssage[0]
         } else {
-            logger.log(type: .Warning, "No command byte found")
-            
+            logger.log(type: .warning, "No command byte found")
             return nil
         }
     }
@@ -641,39 +569,30 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         switch central.state {
         case .poweredOn:
             bleState = BLE_State.BT_OK
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .poweredOff:
             bleState = BLE_State.BT_NA
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .resetting:
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .unauthorized:
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .unsupported:
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .unknown:
-            logger.log(type: .Info, "BT changed to \(bleState)")
+            logger.log(type: .info, "BT changed to \(bleState)")
             break
         default:
             break
         }
     }
     
-    
-    
-    // Scantime ??
-    
-    // Delegate - Called when scan has results
-    
-    
-    
-    
-    
+
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
@@ -683,10 +602,11 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             if traceletNames.contains(where: { (peripheralName as AnyObject).contains($0) }) {
                 if discoveredTracelets.contains(peripheral) {
                     print("Tracelet \(localName ?? "") already in list")
+ 
                 } else {
                
                     if inProximity(RSSI) {
-                        logger.log(type: .Info, "Tracelet \(localName ?? "") in range. RSSI: \(RSSI)")
+                        logger.log(type: .info, "Tracelet \(localName ?? "") in range. RSSI: \(RSSI)")
                     
                         // Find the index where to insert the peripheral based on RSSI
                         var insertIndex = 0
@@ -707,37 +627,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
 
     
-    
-    // Old version no RSSI sorting
-    
-//    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-//
-//        peripheral.delegate = self
-//        // Needs to be improved -> This should return a list of devices!
-//        // Connect either to Dummy(df2b) or "black Tracelet" (6ec6)
-//
-//        if let peripheralName = peripheral.name {
-//            if traceletNames.contains(where: { peripheralName.contains($0) }) {
-//                if discoveredTracelets.contains(peripheral)
-//                {
-//                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") already in list")
-//                } else {
-//                    logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") discovered")
-//                    if inProximity(RSSI) {
-//                        logger.log(type: .Info, "Tracelet \(peripheral.name ?? "") in range. RSSI: \(RSSI)")
-//                        discoveredTracelets.append(peripheral)
-//                    }
-//
-//                }
-//
-//            }
-//
-//        }
-//
-//    }
-    
-    
-    
     // Delegate - Called when connection was successful
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -745,7 +634,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         generalState = STATE.CONNECTED
         stopScan()
         
-        logger.log(type: .Info, "Connected to: \(String(describing: peripheral.name))")
+        logger.log(type: .info, "Connected to: \(peripheral.name ?? "unknown device")")
         connectedTracelet = peripheral
         // Discover UART Service
         peripheral.discoverServices([UUIDs.traceletNordicUARTService])
@@ -762,7 +651,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 // Discover UART Service
                 if service.uuid == UUIDs.traceletNordicUARTService{
                     peripheral.discoverCharacteristics([UUIDs.traceletRxChar,UUIDs.traceletTxChar], for: service)
-                    logger.log(type: .Info, "Services discovered: \(service.uuid), \(service.description)")
+                    logger.log(type: .info, "Services discovered: \(service.uuid), \(service.description)")
                 }
                 
                 return
@@ -779,7 +668,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             for characteristic in characteristics {
                 // Get Characteristics and store in vars
                 if characteristic.uuid == UUIDs.traceletTxChar {
-                    logger.log(type: .Info, "Discovered characteristic: \(characteristic.uuid)")
+                    logger.log(type: .info, "Found TX-Char: \(characteristic.uuid)")
 
                     if characteristic.properties.contains(.notify) {
                         
@@ -792,14 +681,13 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 }
                 else if characteristic.uuid == UUIDs.traceletRxChar {
                     
-                    
-                    logger.log(type: .Info, "Discovered characteristic: \(characteristic.uuid)")
+                    logger.log(type: .info, "Found RX-Char: \(characteristic.uuid)")
                     rxCharacteristic = characteristic
                     
                     switch connectionSource {
                     case .regularConnect:
 
-                        logger.log(type: .Info, "Regular connect action")
+                        logger.log(type: .info, "Regular connect action")
 
                         // If the RX Char is found, then continue the cont to return true to the connect-function
                             if let cont = connectContinuation {
@@ -811,7 +699,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                         
                         
                     case .connectAndStartPositioning:
-                        logger.log(type: .Info, "Connect and start positioning action")
+                        logger.log(type: .info, "Connect and start positioning action")
                         // If the TX Char is found, then continue the cont to return true to the connect-function
                             if let cont = connectContinuation {
                                 cont.resume(returning: true)
@@ -824,7 +712,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                         
                         
                     case .none:
-                        logger.log(type: .Warning, "Unkown connection action")
+                        logger.log(type: .warning, "Unkown connection action")
                        // self.connectContinuation = nil
                     }
                     // Reset connection source
@@ -843,7 +731,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
         guard let data = characteristic.value else {
             // no data transmitted, handle if needed
-            logger.log(type: .Warning, "No data received")
+            logger.log(type: .warning, "No data received")
             return
         }
         
@@ -856,7 +744,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 storeInBuffer(data: BufferElement(message: data))
                 ClassifyResponse(from: data)
             default:
-                logger.log(type: .Warning, "Unknown message: \(data)")
+                logger.log(type: .warning, "Unknown message: \(data)")
             }
         }
     }
@@ -866,7 +754,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Delegate - Called when disconnected
     // Improve: Reset all states
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        logger.log(type: .Info, "Disconnected tracelet: \(peripheral)")
+        logger.log(type: .info, "Disconnected tracelet: \(peripheral.name ?? "unknown device")")
         changeGeneralState(changeTo: .DISCONNECTED)
         
     }
@@ -885,10 +773,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             
             self.connectContinuation = nil
         }
-        
-        
-        allResponses = Strings.CONNECTION_FAILED
-        logger.log(type: .Warning, "failed to connect")
+
+        logger.log(type: .warning, "Failed to connect: \(error?.localizedDescription ?? "unknown error")")
         changeGeneralState(changeTo: .DISCONNECTED)
         
     }
