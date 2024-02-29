@@ -22,7 +22,7 @@ public class Logging {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd/MM/yy HH:mm:ss"
         let dateString = dateFormatter.string(from: date)
-        let content = "\n[\(type)] \(dateString): \(functionName) - \(message)\n"
+        let content = "[\(type)] \(dateString): \(functionName) - \(message)\n"
         
        // Log to OS
         Logger.debug.error("\(content)")
