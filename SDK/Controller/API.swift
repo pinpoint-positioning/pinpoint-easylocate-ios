@@ -41,7 +41,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
         centralManager.delegate = self
-        logger.log(type: .info, "SDK initiated: \n  BT-state: \(centralManager.state)")
+        logger.log(type: .info, "SDK initiated: \n  BT-state: \(bleState)")
     }
   
     
@@ -54,9 +54,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
-        
-        logger.log(type: .info, "Scan started (State: \(generalState))")
-        
+
         guard bleState == .BT_OK else {
             logger.log(type: .error, "Bluetooth not available: \(bleState)")
             return
@@ -71,8 +69,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             logger.log(type: .error, "Scan not started: State was: \(generalState)")
             return
         }
-        discoveredTracelets = []
         
+        discoveredTracelets = []
         
         // Set State
         changeScanState(changeTo: .SCANNING)
@@ -84,6 +82,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             
             //Initiate BT Scan
             self.centralManager.scanForPeripherals(withServices: nil, options: options)
+            self.logger.log(type: .info, "Scan started")
             
             // Stop scan after timeout
             DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
@@ -111,13 +110,10 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         changeScanState(changeTo: .IDLE)
         logger.log(type: .info, "Scan stopped")
     }
-    
-    
 
     
     // MARK: - Connect()
 
-    
 
     public enum ConnectionSource {
         case regularConnect
@@ -145,9 +141,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
 
 
-    
-    
-    
+ 
     /// Starts a connection attempt to a nearby tracelet and starts positioning
     /// - Parameter device: Pass a discovered tracelet-object
     public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
@@ -171,7 +165,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     /// Disconnects from a tracelet
     public func disconnect() {
-        logger.log(type: .info, "start disconnecting")
+        logger.log(type: .info, "Disconnecting")
         if let tracelet = connectedTracelet {
             centralManager.cancelPeripheralConnection(tracelet)
         }
@@ -431,7 +425,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Maybe include PowerTX Level- -> TBD
     
     private func inProximity(_ RSSI: NSNumber) -> Bool {
-        if (RSSI.intValue > -45 && RSSI != 127){
+        if (RSSI.intValue > -55 && RSSI != 127){
             return true
         } else {
             return false
@@ -754,7 +748,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Delegate - Called when disconnected
     // Improve: Reset all states
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        logger.log(type: .info, "Disconnected tracelet: \(peripheral.name ?? "unknown device")")
+        logger.log(type: .info, "Disconnected from TRACElet")
         changeGeneralState(changeTo: .DISCONNECTED)
         
     }
