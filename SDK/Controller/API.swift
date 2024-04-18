@@ -28,11 +28,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     @Published public var connectedTracelet: CBPeripheral?
     @Published public var logPositions:Bool = false
-
+    
+    @Published public var config = Config.shared
+    
     public var messageBuffer = [BufferElement]()
     var discoveredTracelets = [CBPeripheral]()
     var centralManager: CBCentralManager!
-    let decoder = Decoder()
     var rxCharacteristic: CBCharacteristic?
     let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
     
@@ -43,7 +44,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         centralManager.delegate = self
         logger.log(type: .info, "SDK initiated: \n  BT-state: \(bleState)")
     }
-  
+    
     
     
     // MARK: - Scan()
@@ -54,7 +55,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void))
     {
-
+        
         guard bleState == .BT_OK else {
             logger.log(type: .error, "Bluetooth not available: \(bleState)")
             return
@@ -110,24 +111,24 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         changeScanState(changeTo: .IDLE)
         logger.log(type: .info, "Scan stopped")
     }
-
+    
+    
     
     // MARK: - Connect()
-
-
+    
     public enum ConnectionSource {
         case regularConnect
         case connectAndStartPositioning
     }
-    
     public var connectionSource: ConnectionSource?
     private var connectContinuation: CheckedContinuation<Bool, any Error>? = nil
+    
     
     /// Starts a connection attempt to a nearby tracelet
     /// - Parameter device: Pass a discovered tracelet-object
     public func connect(device: CBPeripheral) async throws -> Bool{
         connectionSource = .regularConnect
- 
+        
         logger.log(type: .info, "Connection attempt initiated")
         guard generalState != STATE.CONNECTED else {
             logger.log(type: .warning, "Already connected")
@@ -139,14 +140,14 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             centralManager.connect(device, options: nil)
         }
     }
-
-
- 
+    
+    
+    
     /// Starts a connection attempt to a nearby tracelet and starts positioning
     /// - Parameter device: Pass a discovered tracelet-object
     public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
         connectionSource = .connectAndStartPositioning
- 
+        
         logger.log(type: .info, "Connection attempt initiated")
         guard generalState != STATE.CONNECTED else {
             logger.log(type: .warning, "Already connected")
@@ -175,28 +176,27 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - Send()
-    // Send write command to BT device
     /// Sents a command to a tracelet
     /// - Parameters:
     ///   - tracelet: tracelet object
     ///   - data: command content
     /// - Returns: bool
-    func send(to tracelet: CBPeripheral, data: Data) -> Bool {
+    func send(to tracelet: CBPeripheral, data: [UInt8]) -> Bool {
         var success = false
         guard generalState == STATE.CONNECTED else {
             logger.log(type: .error, "State must be CONNECTED to use send()")
             return success
         }
+        let encData = (config.uci ?  UCIEncoder().encodeBytes(Data(data)): Encoder.encodeByte(Data(data)))
         if let rxCharacteristic = rxCharacteristic {
-            tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
+            tracelet.writeValue(encData, for: rxCharacteristic,type: CBCharacteristicWriteType.withoutResponse)
             success = true
         }
         return success
     }
     
     
-    
-    
+
     
     func sendWithResponse(to tracelet: CBPeripheral, data: Data) {
         guard generalState == STATE.CONNECTED else {
@@ -204,8 +204,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return
         }
         
+        let encData = (config.uci ?  UCIEncoder().encodeBytes(Data(data)): Encoder.encodeByte(Data(data)))
         if let rxCharacteristic = rxCharacteristic {
-            tracelet.writeValue(data as Data, for: rxCharacteristic,type: CBCharacteristicWriteType.withResponse)
+            tracelet.writeValue(encData, for: rxCharacteristic,type: CBCharacteristicWriteType.withResponse)
             
         }
     }
@@ -213,41 +214,35 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     // MARK: - ShowMe()
-
     /// Sends a ShowMe -command to the tracelet
     /// - Parameter tracelet: pass a connected tracelet object
     public func showMe(tracelet: CBPeripheral? = nil) {
         var device: CBPeripheral?
-
+        
         if tracelet == nil {
             device = connectedTracelet
         } else {
             device = tracelet
         }
-
+        
         guard let selectedDevice = device else {
             // Handle the case where no tracelet is available
             logger.log(type: .error, "No tracelet available.")
             return
         }
-
-        let cmdByte = ProtocolConstants.cmdCodeShowMe
-        let data = Encoder.encodeByte(cmdByte)
-        let result = send(to: selectedDevice, data: data)
+        
+        let result = send(to: selectedDevice, data: [ProtocolConstants.cmdCodeShowMe])
         logger.log(type: .info, "ShowMe - \(result) ")
     }
     
     // MARK: - startPositioning()
-    
     /// Sends the command to start the UWB-positioning to the tracelet
     public func startPositioning() {
         guard let tracelet = connectedTracelet else {
             logger.log(type: .error, "No tracelet connected")
             return
         }
-        let cmdByte = ProtocolConstants.cmdCodeStartPositioning
-        let data = Encoder.encodeByte(cmdByte)
-        let result = send(to: tracelet, data: data)
+        let result = send(to: tracelet, data:  [ProtocolConstants.cmdCodeStartPositioning])
         logger.log(type: .info, "Start Positioning - \(result)")
     }
     
@@ -260,27 +255,26 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             // handle missing tracelet or characteristic
             return
         }
-        let cmdByte = ProtocolConstants.cmdCodeStopPositioning
-        let data = Encoder.encodeByte(cmdByte)
-        let result = send(to: tracelet, data: data)
+        let result = send(to: tracelet, data: [ProtocolConstants.cmdCodeStopPositioning])
         logger.log(type: .info,"Stop Positioning - \(result)")
     }
     
     
     /// Sets the Channel to 5 or 9
     /// - Parameter channel: channel 5 or 9
-    public func setChannel(channel:Int8) async -> Bool {
+    public func setChannel(channel:Int8) -> Bool {
         let Uint8Channel: UInt8 = UInt8(bitPattern: channel)
         let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetChannel, Uint8Channel]
         var success = false
         
         if let tracelet = connectedTracelet {
-            success = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
-            
+            success = send(to: tracelet, data: dataArray)
             logger.log(type: .info, "Channel set to:  \(channel), Success:\(success)")
+            return success
+        } else {
+            return false
         }
         
-        return success
     }
     
     
@@ -293,21 +287,18 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             logger.log(type: .error, "siteID is not a valid UInt16 value")
             return false  // Return false if siteID is out of range
         }
-
+        
         let dataArray: [UInt16] = [UInt16(ProtocolConstants.cmdCodeSetSiteID), siteID]
         
-        // Convert UInt16 array to UInt8 array
- 
-         var uint8Array = [UInt8]()
-         for value in dataArray {
-             withUnsafeBytes(of: value) { uint8Array.append(contentsOf: $0) }
-         }
+        var uint8Array = [UInt8]()
+        for value in dataArray {
+            withUnsafeBytes(of: value) { uint8Array.append(contentsOf: $0) }
+        }
         logger.log(type: .info, "Sent: \(uint8Array)")
         
-        
         if let tracelet = connectedTracelet {
-            success = send(to: tracelet, data: Encoder.encodeBytes(uint8Array))
-           
+            success = send(to: tracelet, data: uint8Array)
+            
             logger.log(type: .info, "SiteID set to: \(String(siteID, radix: 16)), Success: \(success)")
         } else {
             success = false
@@ -316,17 +307,15 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         
         return success
     }
+    
 
-    
-    
     /// Sets a positioning interval
     /// - Parameter interval: interval in n x 250ms
-    public func setPositioningInterval(interval:Int8) {
-        let Uint8Interval: UInt8 = UInt8(bitPattern: interval)
-        let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetPositioningInterval, Uint8Interval]
+    public func setPositioningInterval(interval:UInt8) {
         
+        let dataArray = [ProtocolConstants.cmdCodeSetPositioningInterval, interval]
         if let tracelet = connectedTracelet {
-            let result = send(to: tracelet, data: Encoder.encodeBytes(dataArray))
+            let result = send(to: tracelet, data: dataArray)
             logger.log(type: .info, "Interval set to:  \(interval) - \(result)")
         }
     }
@@ -354,8 +343,6 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     // MARK: - getStatus()
-    
-    
     /// Get the status of a connected tracelet
     /// - Returns: status object
     public func getStatus() async -> TL_StatusResponse? {
@@ -364,11 +351,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return nil
         }
         logger.log(type: .info, "Status requested")
-        let cmdByte = ProtocolConstants.cmdCodeGetStatus
-        let data = Encoder.encodeByte(cmdByte)
         
         if let tracelet = connectedTracelet {
-            sendWithResponse(to: tracelet, data: data)
+            sendWithResponse(to: tracelet, data: Data([ProtocolConstants.cmdCodeGetStatus]))
             changeComState(changeTo: .WAITING_FOR_RESPONSE)
         }
         
@@ -386,8 +371,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         for message in buffer {
             if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeStatus)  {
                 messageFound = true
-                let response = TraceletResponse().GetStatusResponse(from: message.message)
-                self.logger.log(type: .info, "Message found in \n Buffer: [\(TraceletResponse().GetStatusResponse(from: message.message))]")
+                let response = await TraceletResponse().GetStatusResponse(from: message.message)
+                self.logger.log(type: .info, "Message found in \n Buffer: [\(await TraceletResponse().GetStatusResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return response
             }
@@ -408,11 +393,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return
         }
         
-        let cmdByte = ProtocolConstants.cmdCodeStartPositioning
-        let data = Encoder.encodeByte(cmdByte)
-        
         if let tracelet = connectedTracelet {
-            sendWithResponse(to: tracelet, data: data)
+            sendWithResponse(to: tracelet, data: Data([ProtocolConstants.cmdCodeStartPositioning]))
         }
         
         changeComState(changeTo: .WAITING_FOR_RESPONSE)
@@ -425,18 +407,17 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     // Maybe include PowerTX Level- -> TBD
     
     private func inProximity(_ RSSI: NSNumber) -> Bool {
-        if (RSSI.intValue > -55 && RSSI != 127){
+        if (RSSI.intValue > -40 && RSSI != 127){
             return true
         } else {
             return false
         }
     }
-
+    
     
     
     
     // MARK: - getVersion()
-    
     /// Requests the firmware version from the tracelet (async)
     /// - Returns: String
     public func getVersion() async -> String? {
@@ -444,11 +425,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             logger.log(type: .error, "State is \(generalState)")
             return nil
         }
-        let cmdByte = ProtocolConstants.cmdCodeGetVersion
-        let data = Encoder.encodeByte(cmdByte)
-        
         if let tracelet = connectedTracelet {
-            sendWithResponse(to: tracelet, data: data)
+            sendWithResponse(to: tracelet, data: Data([ProtocolConstants.cmdCodeGetVersion]))
             changeComState(changeTo: .WAITING_FOR_RESPONSE)
         }
         let version = await getVersionFromBuffer()
@@ -465,8 +443,8 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         for message in buffer {
             if (self.getCmdByte(from: message.message) == ProtocolConstants.cmdCodeVersion)  {
                 messageFound = true
-                let response = TraceletResponse().getVersionResponse(from: message.message)
-                self.logger.log(type: .info, "Message found in \n Buffer: [\(TraceletResponse().getVersionResponse(from: message.message))]")
+                let response = await TraceletResponse().getVersionResponse(from: message.message)
+                self.logger.log(type: .info, "Message found in \n Buffer: [\(await TraceletResponse().getVersionResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return response.version
             }
@@ -481,7 +459,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     // MARK: - Buffer handling
     
-    public func storeInBuffer(data:BufferElement) {
+    func storeInBuffer(data:BufferElement) {
         
         if (messageBuffer.count > 10)
         {
@@ -492,10 +470,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     }
     
     
-    // ZEIT????
-    // Delay until buffer is frozen when requested
-    
-    public func freezeBuffer() async -> [BufferElement]  {
+    func freezeBuffer() async -> [BufferElement]  {
         do {
             try await Task.sleep(nanoseconds: 500_000_000)
         } catch {
@@ -507,22 +482,23 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         return buffer
     }
     
-
+    
     // MARK: - ClassifyResponse()
-
-    public func ClassifyResponse (from byteArray: Data)
-
+    
+    func ClassifyResponse (from byteArray: Data)
+    
     {
-        let valByteArray = Decoder().ValidateMessage(of: byteArray)
+        // UCI or Legacy
+        let valByteArray = (config.uci ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
         if byteArray.isEmpty {
             return
         }
-
+        
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
-
+            
             //log all positions
             if logPositions {
                 logger.log(type: .info, "X: \(localPosition.xCoord) y: \(localPosition.yCoord)")
@@ -543,8 +519,9 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
     
     
     
-    public func getCmdByte(from data: Data) -> UInt8? {
-        let valMesssage = Decoder().ValidateMessage(of: data)
+    func getCmdByte(from data: Data) -> UInt8? {
+        let valMesssage = UCIDecoder().decode(data: data)
+        //   let valMesssage = Decoder().ValidateMessage(of: data)
         
         // Check if the valMesssage array is not empty and the index is within bounds
         if !valMesssage.isEmpty{
@@ -554,7 +531,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             return nil
         }
     }
-
+    
     
     
     //MARK: - Delegate Functions
@@ -586,7 +563,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
     }
     
-
+    
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
@@ -596,12 +573,12 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             if traceletNames.contains(where: { (peripheralName as AnyObject).contains($0) }) {
                 if discoveredTracelets.contains(peripheral) {
                     print("Tracelet \(localName ?? "") already in list")
- 
+                    
                 } else {
-               
+                    
                     if inProximity(RSSI) {
                         logger.log(type: .info, "Tracelet \(localName ?? "") in range. RSSI: \(RSSI)")
-                    
+                        
                         // Find the index where to insert the peripheral based on RSSI
                         var insertIndex = 0
                         for (index, existingPeripheral) in discoveredTracelets.enumerated() {
@@ -619,7 +596,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             }
         }
     }
-
+    
     
     // Delegate - Called when connection was successful
     
@@ -663,7 +640,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                 // Get Characteristics and store in vars
                 if characteristic.uuid == UUIDs.traceletTxChar {
                     logger.log(type: .info, "Found TX-Char: \(characteristic.uuid)")
-
+                    
                     if characteristic.properties.contains(.notify) {
                         
                         // Moved to StartPositioning()
@@ -680,14 +657,14 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                     
                     switch connectionSource {
                     case .regularConnect:
-
+                        
                         logger.log(type: .info, "Regular connect action")
-
+                        
                         // If the RX Char is found, then continue the cont to return true to the connect-function
-                            if let cont = connectContinuation {
-                                cont.resume(returning: true)
-                                self.connectContinuation = nil
-                            }
+                        if let cont = connectContinuation {
+                            cont.resume(returning: true)
+                            self.connectContinuation = nil
+                        }
                         //StopPos on regular connect
                         stopPositioning()
                         
@@ -695,23 +672,23 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
                     case .connectAndStartPositioning:
                         logger.log(type: .info, "Connect and start positioning action")
                         // If the TX Char is found, then continue the cont to return true to the connect-function
-                            if let cont = connectContinuation {
-                                cont.resume(returning: true)
-                                self.connectContinuation = nil
-                            }
+                        if let cont = connectContinuation {
+                            cont.resume(returning: true)
+                            self.connectContinuation = nil
+                        }
                         //StartPos on ConnectAndStartPositioning
                         
                         startPositioning()
-
+                        
                         
                         
                     case .none:
                         logger.log(type: .warning, "Unkown connection action")
-                       // self.connectContinuation = nil
+                        // self.connectContinuation = nil
                     }
                     // Reset connection source
                     connectionSource = nil
-  
+                    
                 }
             }
         }
@@ -730,7 +707,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
         }
         
         // Get TX  value
-
+        
         if characteristic.uuid == UUIDs.traceletTxChar {
             
             switch comState {
@@ -767,7 +744,7 @@ public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, Obse
             
             self.connectContinuation = nil
         }
-
+        
         logger.log(type: .warning, "Failed to connect: \(error?.localizedDescription ?? "unknown error")")
         changeGeneralState(changeTo: .DISCONNECTED)
         
