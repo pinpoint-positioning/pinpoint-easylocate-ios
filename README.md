@@ -1,13 +1,8 @@
-# Installation via CocoaPods
-
-# Usage
-
-
-# pinpoint-easylocate-ios Pod
+# Pinpoint-Easylocate-iOS-SDK Pod
 
 ## Installation
 
-To integrate the `pinpoint-easylocate-ios` pod into your Xcode project using CocoaPods, specify it in your `Podfile`:
+To integrate the `Pinpoint-Easylocate-iOS-SDK` pod into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 
 
@@ -22,7 +17,7 @@ target 'YourAppTargetName' do
   use_frameworks!
 
   # Pods for YourAppTargetName
-  pod 'pinpoint-easylocate-ios', '~> 11.4.1.5'
+  pod 'Pinpoint-Easylocate-iOS-SDK'
 
 end
 ```
@@ -55,7 +50,7 @@ The `API` class provides various functions to interact with nearby tracelets usi
 Access the singleton instance of the `API` class:
 
 ```swift
-let api = API.shared
+let api = EasylocateAPI.shared
 ```
 
 ### Scanning for Tracelets
@@ -171,7 +166,7 @@ print("SiteID set success: \(success)")
 Set the positioning interval:
 
 ```swift
-api.setPositioningInterval(interval: 1) // Interval in n x 250ms, Default: 1 (update every 1 x 259ms)
+api.setPositioningInterval(interval: 1) // Interval in n x 250ms, Default: 1 (update every 1 x 250ms)
 ```
 
 ### Retrieving Tracelet Information
