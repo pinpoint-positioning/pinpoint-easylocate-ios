@@ -13,7 +13,7 @@ import CoreBluetooth
 
 class Commnunication: ObservableObject {
     
-    public static let shared = API()
+    public static let shared = EasylocateAPI()
     let logger = Logging.shared
     @Published public var config = Config.shared
     var rxCharacteristic: CBCharacteristic?

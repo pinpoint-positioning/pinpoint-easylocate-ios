@@ -13,8 +13,8 @@ import SwiftUI
 
 
 
-public class API: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
-    public static let shared = API()
+public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
+    public static let shared = EasylocateAPI()
     let logger = Logging.shared
     
     @Published public var generalState:STATE = .DISCONNECTED
