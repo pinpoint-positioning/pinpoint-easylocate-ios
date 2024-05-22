@@ -97,7 +97,6 @@ public struct SiteData: Codable, Equatable {
     public var sitefileScheme = SitefileScheme()
     
     public init() {
-        // Initialize your properties here
         self.map = Map()
         self.satlets = []
         self.sitefileScheme = SitefileScheme()

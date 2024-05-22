@@ -33,15 +33,14 @@ public struct ProtocolConstants {
     public static let cmdCodeSetChannel:UInt8 = 0x27
     public static let cmdCodeSetSiteID:UInt8 = 0x25
     
-    
-    
     // Message Indicators
     public static let cmdCodePosition:UInt8 = 0x97
     public static let cmdCodeStatus:UInt8 =  0x92
     public static let cmdCodeVersion:UInt8 = 0x94
     }
 
-public struct UCIProtocolConstants {
+
+    public struct UCIProtocolConstants {
     static let maxPayloadSize: UInt8 = 255
     static let packetHeaderSize: UInt8 = 4
     static let packetSize: UInt8 = maxPayloadSize + packetHeaderSize
