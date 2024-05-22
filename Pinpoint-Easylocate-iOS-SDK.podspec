@@ -15,7 +15,7 @@ Pod::Spec.new do |spec|
   #  summary should be tweet-length, and the description more in depth.
   #
 
-  spec.name         = "Pinpoint-Easylocate-iOS"
+  spec.name         = "Pinpoint-Easylocate-iOS-SDK"
   spec.version      = "11.4.0.0"
   spec.summary      = "A iOS SDK for Pinpoint devices"
 
