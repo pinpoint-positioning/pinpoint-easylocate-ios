@@ -31,14 +31,14 @@ pod install
 
 ## Usage
 
-To use the `pinpoint-easylocate-ios` pod in your iOS project, follow the steps below to integrate and utilize the API class provided by the pod.
+To use the `Pinpoint-Easylocate-iOS-SDK` in your iOS project, follow the steps below to integrate and utilize the API class provided by the pod.
 
 ### Importing the Module
 
 First, import the module at the top of your Swift file:
 
 ```swift
-import pinpoint_easylocate_ios
+import Pinpoint-Easylocate-iOS-SDK
 ```
 
 ### API Class Overview
