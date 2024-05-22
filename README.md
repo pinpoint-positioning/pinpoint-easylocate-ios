@@ -38,7 +38,7 @@ To use the `Pinpoint-Easylocate-iOS-SDK` in your iOS project, follow the steps b
 First, import the module at the top of your Swift file:
 
 ```swift
-import Pinpoint-Easylocate-iOS-SDK
+import Pinpoint_Easylocate_iOS_SDK
 ```
 
 ### API Class Overview
@@ -125,6 +125,46 @@ Example for SwiftUI:
             yPos = newPosition.yCoord
         }
 
+```
+
+Example for a PositionFetcher-Class:
+
+```swift
+import Pinpoint_Easylocate_iOS_SDK
+import Combine
+
+struct PositionDataStruct:Identifiable,Equatable, Hashable {
+    var id = UUID()
+    var x = Double()
+    var y = Double()
+    var acc = Double()
+}
+
+class PositionFetcher:ObservableObject {
+    
+    static let shared = PositionFetcher()
+    
+    let api = EasylocateAPI.shared
+    var data = [PositionDataStruct]()
+    var cancellables: Set<AnyCancellable> = []
+    
+    init() {
+        // Set up observation for changes in api.localPosition
+        api.$localPosition
+            .sink { [weak self] newPosition in
+                self?.fillPositionArray()
+            }
+            .store(in: &cancellables)
+    }
+    
+
+// Store position data in array for later use 
+    func fillPositionArray() {
+        DispatchQueue.main.async { [self] in
+            self.data.append(PositionDataStruct(x: api.localPosition.xCoord, y: api.localPosition.yCoord, acc: api.localPosition.accuracy))
+        }
+    }
+}
 ```
 
 
