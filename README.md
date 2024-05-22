@@ -53,7 +53,15 @@ Access the singleton instance of the `API` class:
 let api = EasylocateAPI.shared
 ```
 
-### Scanning for Tracelets
+### Flow-logic to receive postion data
+
+1. Scan for tracelet
+2. Connect to tracelet
+3. Send 'StartPositioning'-Command to tracelet.
+4. Listen to position stream.
+
+
+### Scanning for Tracelets (1)
 
 Start scanning for nearby tracelets with a specified timeout. The completion handler returns a list of discovered tracelets.
 
@@ -69,9 +77,9 @@ Stop the scanning process:
 api.stopScan()
 ```
 
-### Connecting to a Tracelet
+### Connecting to a Tracelet and start positioning (2+3)
 
-Connect to a discovered tracelet asynchronously. The function returns a `Bool` indicating success.
+Connect to a discovered tracelet asynchronously. The function returns a `Bool` indicating success. (2)
 
 ```swift
 let discoveredTracelets = [...] // This is obtained from the scan() completion handler
@@ -85,7 +93,7 @@ if let tracelet = discoveredTracelets.first {
 }
 ```
 
-Connect to a tracelet and start positioning:
+Preferably use this function, to connect and directly start positioning mode (2+3):
 
 ```swift
 if let tracelet = discoveredTracelets.first {
@@ -98,19 +106,9 @@ if let tracelet = discoveredTracelets.first {
 }
 ```
 
-Disconnect from a tracelet:
 
-```swift
-api.disconnect()
-```
 
-### Listen to local position stream
-
-```swift
-
-let xPos = api.localPosition.xCoord
-let yPos = api.localPosition.yCoord
-```
+### Listen to local position stream (4)
 
 Example for SwiftUI:
 
@@ -129,7 +127,14 @@ Example for SwiftUI:
 
 ```
 
-### Tracelet Commands
+
+Disconnect from a tracelet:
+
+```swift
+api.disconnect()
+```
+
+### More Tracelet Commands
 
 Send a "ShowMe" command to a connected tracelet:
 
