@@ -4,6 +4,10 @@
 
 ## User settings
 xcuserdata/
+xcshareddata/
+sdk.xcworkspace/
+sdk.xcodeproj/
+SDKTests/
 
 ## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
 *.xcscmblueprint
@@ -29,6 +33,9 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+## Mac specific
+.DS_Store
 
 ## Playgrounds
 timeline.xctimeline
