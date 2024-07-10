@@ -13,13 +13,13 @@ public class TraceletResponse {
     
     public init () {}
     
-    let logger = Logging()
+    let logger = Logging.shared
     @ObservedObject var config = Config.shared
     
     
     //MARK: - Get Position Response
     
-    public func GetPositionResponse (from byteArray: Data) -> TL_PositionResponse {
+    public func GetPositionResponse (from byteArray: Data) -> TraceletPosition {
         
         let valByteArray = (config.uci ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
@@ -80,7 +80,7 @@ public class TraceletResponse {
         let acc = sqrt(max(var1, var2)) / 10;
         
         
-        let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
+        let response = TraceletPosition(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
         return response
         
     }
@@ -90,7 +90,7 @@ public class TraceletResponse {
     //MARK: - Get Satus Response
     
     
-    func GetStatusResponse (from byteArray: Data) -> TL_StatusResponse {        
+    func GetStatusResponse (from byteArray: Data) -> TraceletStatus {        
         
         var valByteArray = (config.uci  ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
@@ -123,7 +123,7 @@ public class TraceletResponse {
         let uwbChannelRange = valByteArray[26]  // one byte, 26
         let preambleTxCodeRange = valByteArray[27]   // one byte, 27
         let preambleRxCodeRange  = valByteArray[28]  // one byte, 28
-                
+        
         
         // Get Bytes from Range
         let roleByte = Int8 (roleByteRange.littleEndian)
@@ -158,28 +158,28 @@ public class TraceletResponse {
         let preambleRxCode  = UInt8(preambleRxCodeRange.littleEndian)
         
         
-        let response = TL_StatusResponse(role: String(roleByte),
-                                         address: address,
-                                         siteIDe: siteID,
-                                         panID: panID,
-                                         posX: posX,
-                                         posY: posY,
-                                         posZ: posZ,
-                                         stateByte: stateByte,
-                                         syncStateByte: syncStateBytes,
-                                         syncSlot: syncSlot,
-                                         syncModeByte: syncModeByte,
-                                         motionStateByte: motionStateByte,
-                                         batteryState: batStateByte,
-                                         batteryLevel: batLevelBytes,
-                                         txLateCnt: txLateCnt,
-                                         flagsByte: flagsByte,
-                                         uwbChannel:uwbChannel,
-                                         preambleRxCode:preambleRxCode,
-                                         preambleTxCode:preambleTxCode
-        
+        let response = TraceletStatus(role: String(roleByte),
+                                      address: address,
+                                      siteIDe: siteID,
+                                      panID: panID,
+                                      posX: posX,
+                                      posY: posY,
+                                      posZ: posZ,
+                                      stateByte: stateByte,
+                                      syncStateByte: syncStateBytes,
+                                      syncSlot: syncSlot,
+                                      syncModeByte: syncModeByte,
+                                      motionStateByte: motionStateByte,
+                                      batteryState: batStateByte,
+                                      batteryLevel: batLevelBytes,
+                                      txLateCnt: txLateCnt,
+                                      flagsByte: flagsByte,
+                                      uwbChannel:uwbChannel,
+                                      preambleRxCode:preambleRxCode,
+                                      preambleTxCode:preambleTxCode
+                                      
         )
-   
+        
         
         return response
         
@@ -189,9 +189,9 @@ public class TraceletResponse {
     }
     
     
-       
     
-    public func getVersionResponse(from byteArray: Data) -> TL_VersionResponse {
+    
+    public func getVersionResponse(from byteArray: Data) -> TraceletVersion {
         
         let valByteArray = (config.uci  ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
@@ -199,14 +199,14 @@ public class TraceletResponse {
             let startIndex = 1 // Skip the first byte
             let versionData = Data(valByteArray[startIndex...])
             if let versionString = String(data: versionData, encoding: .utf8) {
-                return TL_VersionResponse(version: versionString)
+                return TraceletVersion(version: versionString)
             } else {
                 logger.log(type: .warning, "Failed to decode version string")
-                return TL_VersionResponse(version: "")
+                return TraceletVersion(version: "")
             }
         } else {
             logger.log(type: .warning, "Received unknown response to version request")
-            return TL_VersionResponse(version: "")
+            return TraceletVersion(version: "")
         }
         
     }
@@ -216,9 +216,9 @@ public class TraceletResponse {
 
 // Response Protocol conformance
 public protocol Response {
-    var postion:TL_PositionResponse { get }
-    var status: TL_StatusResponse { get }
-    var version: TL_VersionResponse { get }
+    var postion:TraceletPosition { get }
+    var status: TraceletStatus { get }
+    var version: TraceletVersion { get }
 }
 
 

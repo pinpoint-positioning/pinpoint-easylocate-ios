@@ -15,27 +15,27 @@ import SwiftUI
 
 public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = EasylocateAPI()
-    let logger = Logging.shared
     
     @Published public var generalState:STATE = .DISCONNECTED
     @Published public var scanState:STATE = .IDLE
     @Published public var comState:STATE = .IDLE
     @Published public var bleState = BLE_State.UNKNOWN
-    @Published public var localPosition = TL_PositionResponse()
-    @Published public var status = TL_StatusResponse()
-    @Published public var version = TL_VersionResponse()
+    @Published public var localPosition = TraceletPosition()
+    @Published public var status = TraceletStatus()
+    @Published public var version = TraceletVersion()
     @Published public var connectedTracelet: CBPeripheral?
     @Published public var logPositions:Bool = false
     @Published public var config = Config.shared
     
-    var messageBuffer = [BufferElement]()
-    var discoveredTracelets = [CBPeripheral]()
-    var centralManager: CBCentralManager!
-    var rxCharacteristic: CBCharacteristic?
-    let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
+    private let logger = Logging.shared
+    private var messageBuffer = [BufferElement]()
+    private var discoveredTracelets = [CBPeripheral]()
+    private var centralManager: CBCentralManager!
+    private var rxCharacteristic: CBCharacteristic?
+    private let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
     
     
-    public override init() {
+    private override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
         centralManager.delegate = self
@@ -44,7 +44,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     
-   // MARK: - Exposed Public Functions
+    // MARK: - Exposed Public Functions
     
     /// Initiate a scan for nearby tracelets
     /// - Parameters:
@@ -95,7 +95,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
     }
     
-
+    
     
     /// Stops the scaning process for nearby tracelets
     public func stopScan() {
@@ -104,11 +104,11 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         logger.log(type: .info, "Scan stopped")
     }
     
-
+    
     
     public var connectionSource: ConnectionSource?
     private var connectContinuation: CheckedContinuation<Bool, any Error>? = nil
-
+    
     /// Starts a connection attempt to a nearby tracelet
     /// - Parameter device: Pass a discovered tracelet-object
     /// - Returns: Bool (Success)
@@ -183,7 +183,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     
-
+    
     /// Sends the command to start the UWB-positioning to the tracelet
     public func startPositioning() {
         guard let tracelet = connectedTracelet else {
@@ -194,7 +194,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         logger.log(type: .info, "Start Positioning - \(result)")
     }
     
-
+    
     
     /// Sends the command to stop the UWB-positioning to the tracelet
     public func stopPositioning() {
@@ -257,7 +257,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         return success
     }
     
-
+    
     /// Sets a positioning interval
     /// - Parameter interval: interval in n x 250ms
     public func setPositioningInterval(interval:UInt8) {
@@ -270,10 +270,10 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     
-
+    
     /// Get the status of a connected tracelet
     /// - Returns: status object
-    public func getStatus() async -> TL_StatusResponse? {
+    public func getStatus() async -> TraceletStatus? {
         guard generalState == STATE.CONNECTED else {
             logger.log(type: .error, "State is \(generalState)")
             return nil
@@ -330,7 +330,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     
-
+    
     /// Requests the firmware version from the tracelet (async)
     /// - Returns: String
     public func getVersion() async -> String? {
@@ -350,12 +350,12 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         } else {
             return nil
         }
-            
+        
     }
     
     
     
-   private func getResponseFromBuffer(cmdCode:UInt8) async -> Data? {
+    private func getResponseFromBuffer(cmdCode:UInt8) async -> Data? {
         let buffer = await freezeBuffer()
         var messageFound = false
         for message in buffer {
@@ -371,7 +371,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             return nil
         }
     }
-
+    
     
     
     // MARK: - Private Functions
@@ -381,7 +381,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     ///   - tracelet: tracelet object
     ///   - data: command content
     /// - Returns: bool
-   private func send(to tracelet: CBPeripheral, data: [UInt8]) -> Bool {
+    private func send(to tracelet: CBPeripheral, data: [UInt8]) -> Bool {
         var success = false
         guard generalState == STATE.CONNECTED else {
             logger.log(type: .error, "State must be CONNECTED to use send()")
@@ -395,7 +395,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         return success
     }
     
-   private func storeInBuffer(data:BufferElement) {
+    private func storeInBuffer(data:BufferElement) {
         
         if (messageBuffer.count > 10)
         {
@@ -406,7 +406,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     
-   private func freezeBuffer() async -> [BufferElement]  {
+    private func freezeBuffer() async -> [BufferElement]  {
         do {
             try await Task.sleep(nanoseconds: 500_000_000)
         } catch {
@@ -419,7 +419,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     
-
+    
     
     private func ClassifyResponse (from byteArray: Data)
     
@@ -664,7 +664,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             return
         }
         
-    // Get TX  value
+        // Get TX  value
         if characteristic.uuid == UUIDs.traceletTxChar {
             
             switch comState {

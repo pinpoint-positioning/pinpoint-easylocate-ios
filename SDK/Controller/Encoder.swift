@@ -92,7 +92,7 @@ import Foundation
 // Valid vom Firmware 11.4
 
 class UCIEncoder {
-    let logger = Logging()
+    let logger = Logging.shared
     
     func encodeBytes(_ data: Data) -> Data {
         var encBytes = [UInt8]()

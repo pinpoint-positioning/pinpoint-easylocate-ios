@@ -13,7 +13,7 @@ class Decoder {
     init() {}
     lazy var byteArray = Data()
     lazy var decByteArray = [UInt8]()
-    let logger = Logging()
+    let logger = Logging.shared
     
     func validateMessage(of byteArray: Data) -> [UInt8] {
         //Reset array every run
@@ -86,7 +86,7 @@ class UCIDecoder {
     func isHeader(byteList: [UInt8]) -> Bool {
         let mt = byteList[0] >> 5
         if ![UInt8(UCIProtocolConstants.msgTypeCtrlNtfy), UInt8(UCIProtocolConstants.msgTypeCtrlResp)].contains(UInt8(mt)) {
-
+            
             return false
         }
         let gid = byteList[0] & 0xF
@@ -118,7 +118,7 @@ class UCIDecoder {
         // take each byte chunk and decode
         for byte in dataUInt8 {
             switch decodingState {
-            // header is not yet complete
+                // header is not yet complete
             case .initial:
                 currentHeader.append(byte)
                 // check if the header is complete
@@ -135,7 +135,7 @@ class UCIDecoder {
                         decodedByteBuffer.removeAll()
                     }
                 }
-            // header is complete, receiving payload
+                // header is complete, receiving payload
             case .running:
                 currentPayloadLength += 1
                 decodedByteBuffer.append(byte)
@@ -154,30 +154,30 @@ class UCIDecoder {
     }
 }
 
+
+
+
+struct SerialDataPackageError: Error {
+    var localizedDescription: String
+}
+
+class SerialDataPackage {
+    var timestamp: Int
+    var data: [UInt8]
     
-    
-    
-    struct SerialDataPackageError: Error {
-        var localizedDescription: String
+    init(timestamp: Int, data: [UInt8]) {
+        self.timestamp = timestamp
+        self.data = data
     }
     
-    class SerialDataPackage {
-        var timestamp: Int
-        var data: [UInt8]
-        
-        init(timestamp: Int, data: [UInt8]) {
-            self.timestamp = timestamp
-            self.data = data
+    /// Get command code (message type) from received data.
+    func getCommandCode() throws -> Int {
+        guard !data.isEmpty else {
+            throw SerialDataPackageError(localizedDescription: "Cannot get command code from received data package.")
         }
-        
-        /// Get command code (message type) from received data.
-        func getCommandCode() throws -> Int {
-            guard !data.isEmpty else {
-                throw SerialDataPackageError(localizedDescription: "Cannot get command code from received data package.")
-            }
-            return Int(data[0])
-        }
+        return Int(data[0])
     }
+}
 
 
 //MARK: - Extensions

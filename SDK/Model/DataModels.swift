@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import Combine
 
 
-// Positin Model
-public struct TL_PositionResponse:Equatable {
+public struct TraceletPosition:Equatable {
     
     public var xCoord = Double()
     public var yCoord = Double()
@@ -25,7 +23,7 @@ public struct TL_PositionResponse:Equatable {
 }
 
 
-public struct TL_StatusResponse {
+public struct TraceletStatus {
     public var role: String
     public var address: String
     public var siteIDe: String
@@ -72,7 +70,7 @@ public struct TL_StatusResponse {
 
 
 
-public struct TL_VersionResponse {
+public struct TraceletVersion {
     
     public var version = String()
 }
@@ -142,4 +140,11 @@ public protocol ConnectionDelegate: AnyObject {
 
 enum UCIDecoderState {
     case initial, running
+}
+
+public enum LogType {
+   case info
+   case warning
+   case error
+   
 }
