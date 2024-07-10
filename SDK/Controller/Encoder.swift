@@ -35,8 +35,7 @@ import Foundation
 
    
  
-  // Encode byte array
-    // NO CRC Yet
+     // Encode byte array
 
    static func encodeBytes(_ bytes: [UInt8]) -> Data {
  
@@ -90,14 +89,7 @@ import Foundation
 }
 
 
-
-extension Array {
-    func slices(size: Int) -> [[Element]] {
-        return stride(from: 0, to: self.count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, self.count)])
-        }
-    }
-}
+// Valid vom Firmware 11.4
 
 class UCIEncoder {
     let logger = Logging()
@@ -155,5 +147,13 @@ extension Data {
     
     func hexEncodedString() -> String {
         return map { String(format: "%02hhx", $0) }.joined()
+    }
+}
+
+extension Array {
+    func slices(size: Int) -> [[Element]] {
+        return stride(from: 0, to: self.count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, self.count)])
+        }
     }
 }

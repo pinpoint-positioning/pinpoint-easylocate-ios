@@ -13,10 +13,11 @@ import UIKit
 public class Logging {
     
     public static let shared = Logging()
+    
+    let config = Config.shared
     public init() {}
     
 
-    
     public func log(type: LogType, _ message: String, functionName: String = #function) {
         let date = Date()
         let dateFormatter = DateFormatter()
@@ -27,8 +28,10 @@ public class Logging {
        // Log to OS
         Logger.debug.error("\(content)")
         
-        // Log to file
-        logToFile(content)
+        // Optionally log to file
+        if config.logToFile{
+            logToFile(content)
+        }
     }
     
     private func logToFile(_ content: String) {
@@ -85,7 +88,6 @@ public class Logging {
 
 
 extension Logger {
-    /// Using your bundle identifier is a great way to ensure a unique identifier.
     private static var subsystem = Bundle.main.bundleIdentifier!
 
     /// Logs the view cycles like a view that appeared.

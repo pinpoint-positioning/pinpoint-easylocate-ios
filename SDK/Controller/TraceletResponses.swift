@@ -65,9 +65,6 @@ public class TraceletResponse {
         let siteID = siteIdRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian, radix: 16))"})
-        // For siteID: Important to use UInt16 not Int16
-        // Check if correct
-        // Signature is available in tracelet?
         
         if (byteArray.count > 21) {
             signature = signatureRange.withUnsafeBytes({

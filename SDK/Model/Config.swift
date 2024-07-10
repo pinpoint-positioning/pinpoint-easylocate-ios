@@ -10,9 +10,9 @@ import SwiftUI
 import Combine
 
 public class Config: ObservableObject {
-    
     public static let shared = Config()
-    @AppStorage("uci") public var uci:Bool = true
     
+    public var uci:Bool = true
+    public var logToFile:Bool = false
 }
 

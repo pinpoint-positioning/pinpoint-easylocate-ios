@@ -36,5 +36,3 @@ public class WGS84Position {
         return CLLocationCoordinate2D(latitude: newLatitude, longitude: newLongitude)
     }
 }
-
-// Add test Case TestCase example flutter sdk test/utils/geotools

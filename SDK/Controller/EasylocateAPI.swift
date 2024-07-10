@@ -21,17 +21,14 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     @Published public var scanState:STATE = .IDLE
     @Published public var comState:STATE = .IDLE
     @Published public var bleState = BLE_State.UNKNOWN
-    
     @Published public var localPosition = TL_PositionResponse()
     @Published public var status = TL_StatusResponse()
     @Published public var version = TL_VersionResponse()
-    
     @Published public var connectedTracelet: CBPeripheral?
     @Published public var logPositions:Bool = false
-    
     @Published public var config = Config.shared
     
-    public var messageBuffer = [BufferElement]()
+    var messageBuffer = [BufferElement]()
     var discoveredTracelets = [CBPeripheral]()
     var centralManager: CBCentralManager!
     var rxCharacteristic: CBCharacteristic?
@@ -107,17 +104,11 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         logger.log(type: .info, "Scan stopped")
     }
     
-    
-    
 
-    public enum ConnectionSource {
-        case regularConnect
-        case connectAndStartPositioning
-    }
+    
     public var connectionSource: ConnectionSource?
     private var connectContinuation: CheckedContinuation<Bool, any Error>? = nil
-    
-    
+
     /// Starts a connection attempt to a nearby tracelet
     /// - Parameter device: Pass a discovered tracelet-object
     /// - Returns: Bool (Success)
@@ -164,13 +155,10 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         if let tracelet = connectedTracelet {
             centralManager.cancelPeripheralConnection(tracelet)
         }
-        
         connectedTracelet = nil
     }
     
     
-
-
     
     /// Sends a ShowMe -command to the tracelet
     /// - Parameter tracelet: pass a connected tracelet object
@@ -624,7 +612,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
                     
                     switch connectionSource {
                     case .regularConnect:
-                        
                         logger.log(type: .info, "Regular connect action")
                         
                         // If the RX Char is found, then continue the cont to return true to the connect-function
@@ -644,9 +631,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
                             self.connectContinuation = nil
                         }
                         //StartPos on ConnectAndStartPositioning
-                        
                         startPositioning()
-                        
                         
                         
                     case .none:
@@ -672,7 +657,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     // Delegate - Called when char value has updated for defined char
-    
     public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,error: Error?) {
         guard let data = characteristic.value else {
             // no data transmitted, handle if needed
@@ -680,8 +664,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             return
         }
         
-        // Get TX  value
-        
+    // Get TX  value
         if characteristic.uuid == UUIDs.traceletTxChar {
             
             switch comState {
@@ -697,7 +680,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     // Delegate - Called when disconnected
-    // Improve: Reset all states
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         logger.log(type: .info, "Disconnected from TRACElet")
         changeGeneralState(changeTo: .DISCONNECTED)
@@ -706,7 +688,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     //Failsafe Delegate Functions
-    
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         
         if let cont = connectContinuation {
@@ -726,11 +707,5 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
 }
 
-
-
-public protocol ConnectionDelegate: AnyObject {
-    func connectionDidSucceed()
-    func connectionDidFail()
-}
 
 

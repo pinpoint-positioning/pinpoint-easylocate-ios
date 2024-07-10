@@ -20,14 +20,10 @@ import CoreBluetooth
         public lazy var stream: AsyncStream<TL_PositionResponse> = {
             AsyncStream { (continuation: AsyncStream<TL_PositionResponse>.Continuation) -> Void in
                 self.continuation = continuation
-                /// Configure a termination callback to understand the lifetime of your stream.
                 continuation.onTermination = { @Sendable status in
                     print("Stream terminated with status \(status)")
                 }
             }
         }()
-    
-    
-
     }
 

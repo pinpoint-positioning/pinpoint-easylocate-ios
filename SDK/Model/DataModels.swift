@@ -86,9 +86,6 @@ public struct BufferElement
 }
 
 
-
-
-
 public struct SiteData: Codable, Equatable {
 
     
@@ -112,8 +109,7 @@ public struct SiteData: Codable, Equatable {
         public var originLatitude:Double?
         public var originLongitude:Double?
         public var originAzimuth:Double?
-        public var uwbChannel = 0
-        
+        public var uwbChannel = 0       
 
     }
 
@@ -131,15 +127,19 @@ public struct SiteData: Codable, Equatable {
     public struct SitefileScheme: Codable, Equatable {
         public var version = 0.0
     }
-    
-    
-    
-    
-    
- 
-
-    
-    
-    
+   
 }
 
+public enum ConnectionSource {
+    case regularConnect
+    case connectAndStartPositioning
+}
+
+public protocol ConnectionDelegate: AnyObject {
+    func connectionDidSucceed()
+    func connectionDidFail()
+}
+
+enum UCIDecoderState {
+    case initial, running
+}

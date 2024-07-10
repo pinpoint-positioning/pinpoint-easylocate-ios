@@ -79,17 +79,11 @@ class Decoder {
 
 
 
-
-enum UCIDecoderState {
-    case initial, running
-}
-
 class UCIDecoder {
     var decodingState: UCIDecoderState = .initial
     
     /// Checks if a list([byteList]) of [UCIProtocolConstants.packetHeaderSize] bytes qualifies as a header.
     func isHeader(byteList: [UInt8]) -> Bool {
-        // Octet 0: 3 bit mt (message type), 1 bit pbf (payload buffer flag), 4 bit gid (group identifier)
         let mt = byteList[0] >> 5
         if ![UInt8(UCIProtocolConstants.msgTypeCtrlNtfy), UInt8(UCIProtocolConstants.msgTypeCtrlResp)].contains(UInt8(mt)) {
 
@@ -99,7 +93,6 @@ class UCIDecoder {
         if gid != UCIProtocolConstants.gidVendEasylocateLegacy {
             return false
         }
-        // Octet 1: 2 bits reserved for future use, 6 for oid (opcode identifer)
         let oid = byteList[1] & 0x3f
         if oid != UCIProtocolConstants.oidVendEasylocateLegacy {
             return false
@@ -157,10 +150,8 @@ class UCIDecoder {
             }
         }
         
-        return decodedByteBuffer // Return decodedByteBuffer
+        return decodedByteBuffer
     }
-
-
 }
 
     
