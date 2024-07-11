@@ -133,22 +133,22 @@ Example for a PositionFetcher-Class:
 import Pinpoint_Easylocate_iOS_SDK
 import Combine
 
-struct PositionDataStruct:Identifiable,Equatable, Hashable {
+struct PositionData: Identifiable, Equatable, Hashable {
     var id = UUID()
     var x = Double()
     var y = Double()
     var acc = Double()
 }
 
-class PositionFetcher:ObservableObject {
+class PositionFetcher: ObservableObject {
     
     static let shared = PositionFetcher()
     
     let api = EasylocateAPI.shared
-    var data = [PositionDataStruct]()
-    var cancellables: Set<AnyCancellable> = []
+    @Published var data = [PositionData]()
+    private var cancellables: Set<AnyCancellable> = []
     
-    init() {
+    private init() {
         // Set up observation for changes in api.localPosition
         api.$localPosition
             .sink { [weak self] newPosition in
@@ -157,14 +157,19 @@ class PositionFetcher:ObservableObject {
             .store(in: &cancellables)
     }
     
-
-// Store position data in array for later use 
+    // Store position data in array for later use 
     func fillPositionArray() {
-        DispatchQueue.main.async { [self] in
-            self.data.append(PositionDataStruct(x: api.localPosition.xCoord, y: api.localPosition.yCoord, acc: api.localPosition.accuracy))
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.data.append(PositionData(
+                x: self.api.localPosition.xCoord, 
+                y: self.api.localPosition.yCoord, 
+                acc: self.api.localPosition.accuracy
+            ))
         }
     }
 }
+
 ```
 
 
