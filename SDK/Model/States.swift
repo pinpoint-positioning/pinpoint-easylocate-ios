@@ -8,16 +8,28 @@
 import Foundation
 
 
-
-public enum STATE {
-    
-    // States accessible to devs
-    
-    case IDLE
-    case SCANNING
+public enum ConnectionState {
     case CONNECTING
     case CONNECTED
     case DISCONNECTED
+}
+
+public enum BLEState {
+    case BT_OK
+    case BT_NA
+    case UNKNOWN
+    
+}
+
+public enum ScanState {
+    case IDLE
+    case SCANNING
+}
+
+
+
+enum ComState {
+    case IDLE
     case WAITING_FOR_POSITION
     case WAITING_FOR_STATUS
     case WAITING_FOR_VERSION
@@ -40,13 +52,7 @@ public enum STATE {
     
 }
 
-public enum BLE_State {
-    
-    case BT_OK
-    case BT_NA
-    case UNKNOWN
-    
-}
+
 
 
 

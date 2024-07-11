@@ -12,21 +12,17 @@ import UIKit
 import SwiftUI
 
 
-
 public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = EasylocateAPI()
     
-    @Published public var generalState:STATE = .DISCONNECTED
-    @Published public var scanState:STATE = .IDLE
-    @Published public var comState:STATE = .IDLE
-    @Published public var bleState = BLE_State.UNKNOWN
+    @Published public var connectionState:ConnectionState = .DISCONNECTED
+    @Published public var bleState = BLEState.UNKNOWN
+    @Published public var scanState:ScanState = .IDLE
     @Published public var localPosition = TraceletPosition()
-    @Published public var status = TraceletStatus()
-    @Published public var version = TraceletVersion()
     @Published public var connectedTracelet: CBPeripheral?
-    @Published public var logPositions:Bool = false
     @Published public var config = Config.shared
     
+    private var comState:ComState = .IDLE
     private let logger = Logging.shared
     private var messageBuffer = [BufferElement]()
     private var discoveredTracelets = [CBPeripheral]()
@@ -60,16 +56,16 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             logger.log(type: .error, "Scan not started: Scan already running")
             return
         }
-        guard generalState == STATE.DISCONNECTED else {
+        guard connectionState == ConnectionState.DISCONNECTED else {
             
-            logger.log(type: .error, "Scan not started: State was: \(generalState)")
+            logger.log(type: .error, "Scan not started: State was: \(connectionState)")
             return
         }
         
         discoveredTracelets = []
         
         // Set State
-        changeScanState(changeTo: .SCANNING)
+        changeScanState(newState: .SCANNING)
         // Added a delay so people have the chance to bring device closer to the phone before scanning starts
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -100,7 +96,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     /// Stops the scaning process for nearby tracelets
     public func stopScan() {
         centralManager.stopScan()
-        changeScanState(changeTo: .IDLE)
+        changeScanState(newState: .IDLE)
         logger.log(type: .info, "Scan stopped")
     }
     
@@ -113,10 +109,11 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     /// - Parameter device: Pass a discovered tracelet-object
     /// - Returns: Bool (Success)
     public func connect(device: CBPeripheral) async throws -> Bool{
+        changeConnectionState(newState: .CONNECTING)
         connectionSource = .regularConnect
         
         logger.log(type: .info, "Connection attempt initiated")
-        guard generalState != STATE.CONNECTED else {
+        guard connectionState != ConnectionState.CONNECTED else {
             logger.log(type: .warning, "Already connected")
             return false
         }
@@ -132,10 +129,11 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     /// Starts a connection attempt to a nearby tracelet and starts positioning
     /// - Parameter device: Pass a discovered tracelet-object
     public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
+        changeConnectionState(newState: .CONNECTING)
         connectionSource = .connectAndStartPositioning
         
         logger.log(type: .info, "Connection attempt initiated")
-        guard generalState != STATE.CONNECTED else {
+        guard connectionState != ConnectionState.CONNECTED else {
             logger.log(type: .warning, "Already connected")
             return false
         }
@@ -274,15 +272,15 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     /// Get the status of a connected tracelet
     /// - Returns: status object
     public func getStatus() async -> TraceletStatus? {
-        guard generalState == STATE.CONNECTED else {
-            logger.log(type: .error, "State is \(generalState)")
+        guard connectionState == ConnectionState.CONNECTED else {
+            logger.log(type: .error, "State is \(connectionState)")
             return nil
         }
         logger.log(type: .info, "Status requested")
         
         if let tracelet = connectedTracelet {
             let _ = send(to: tracelet, data: [ProtocolConstants.cmdCodeGetStatus])
-            changeComState(changeTo: .WAITING_FOR_RESPONSE)
+            changeComState(newState: .WAITING_FOR_RESPONSE)
         }
         
         let response = await getResponseFromBuffer(cmdCode: ProtocolConstants.cmdCodeStatus)
@@ -295,24 +293,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
     }
     
-    
-    
-    
-    public func requestPosition() {
-        
-        logger.log(type: .info, "Position requested")
-        guard generalState == STATE.CONNECTED else {
-            logger.log(type: .error, "State is \(generalState)")
-            return
-        }
-        
-        if let tracelet = connectedTracelet {
-            let _ = send(to: tracelet, data: [ProtocolConstants.cmdCodeStartPositioning])
-        }
-        
-        changeComState(changeTo: .WAITING_FOR_RESPONSE)
-        
-    }
     
     
     // Use RSSI to connect only when close ( > -50 db).
@@ -328,19 +308,18 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     
-    
-    
+
     
     /// Requests the firmware version from the tracelet (async)
     /// - Returns: String
     public func getVersion() async -> String? {
-        guard generalState == STATE.CONNECTED else {
-            logger.log(type: .error, "State is \(generalState)")
+        guard connectionState == ConnectionState.CONNECTED else {
+            logger.log(type: .error, "State is \(connectionState)")
             return nil
         }
         if let tracelet = connectedTracelet {
             let _ = send(to: tracelet, data: [ProtocolConstants.cmdCodeGetVersion])
-            changeComState(changeTo: .WAITING_FOR_RESPONSE)
+            changeComState(newState: .WAITING_FOR_RESPONSE)
         }
         let response = await getResponseFromBuffer(cmdCode: ProtocolConstants.cmdCodeVersion)
         if let response = response {
@@ -383,7 +362,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     /// - Returns: bool
     private func send(to tracelet: CBPeripheral, data: [UInt8]) -> Bool {
         var success = false
-        guard generalState == STATE.CONNECTED else {
+        guard connectionState == ConnectionState.CONNECTED else {
             logger.log(type: .error, "State must be CONNECTED to use send()")
             return success
         }
@@ -434,21 +413,18 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         if (valByteArray[0] == ProtocolConstants.cmdCodePosition)
         {
             localPosition = TraceletResponse().GetPositionResponse(from: byteArray)
-            
-            //log all positions
-            if logPositions {
-                logger.log(type: .info, "X: \(localPosition.xCoord) y: \(localPosition.yCoord)")
-            }
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeStatus)
         {
-            status =  TraceletResponse().GetStatusResponse(from: byteArray)
+            logger.log(type: .info, "Received Status")
+            //status =  TraceletResponse().GetStatusResponse(from: byteArray)
         }
         
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion)
         {
-            version =  TraceletResponse().getVersionResponse(from: byteArray)
+            logger.log(type: .info, "Received Version")
+            //version =  TraceletResponse().getVersionResponse(from: byteArray)
         }
         
     }
@@ -469,22 +445,22 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     }
     
     
-    private func changeGeneralState(changeTo:STATE) {
+    private func changeConnectionState(newState:ConnectionState) {
         DispatchQueue.main.async {
-            self.generalState = changeTo
+            self.connectionState = newState
         }
     }
     
-    private func changeComState(changeTo:STATE) {
+    private func changeComState(newState:ComState) {
         DispatchQueue.main.async {
-            self.comState = changeTo
+            self.comState = newState
         }
     }
     
     
-    private func changeScanState(changeTo:STATE) {
+    private func changeScanState(newState:ScanState) {
         DispatchQueue.main.async {
-            self.scanState = changeTo
+            self.scanState = newState
         }
     }
     
@@ -494,11 +470,11 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            bleState = BLE_State.BT_OK
+            bleState = BLEState.BT_OK
             logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .poweredOff:
-            bleState = BLE_State.BT_NA
+            bleState = BLEState.BT_NA
             logger.log(type: .info, "BT changed to \(bleState)")
             break
         case .resetting:
@@ -556,12 +532,10 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     // Delegate - Called when connection was successful
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        // Set State
-        generalState = STATE.CONNECTED
         stopScan()
-        
-        logger.log(type: .info, "Connected to: \(peripheral.name ?? "unknown device")")
         connectedTracelet = peripheral
+        logger.log(type: .info, "Connected to: \(peripheral.name ?? "unknown device")")
+        changeConnectionState(newState: .CONNECTED)
         // Discover UART Service
         peripheral.discoverServices([UUIDs.traceletNordicUARTService])
         
@@ -600,7 +574,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
                         
                         // Moved to StartPositioning()
                         peripheral.setNotifyValue(true, for: characteristic)
-                        changeComState(changeTo: .WAITING_FOR_RESPONSE)
+                        changeComState(newState: .WAITING_FOR_RESPONSE)
                         
                         
                     }
@@ -682,7 +656,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     // Delegate - Called when disconnected
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         logger.log(type: .info, "Disconnected from TRACElet")
-        changeGeneralState(changeTo: .DISCONNECTED)
+        changeConnectionState(newState: .DISCONNECTED)
         
     }
     
@@ -701,7 +675,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
         
         logger.log(type: .warning, "Failed to connect: \(error?.localizedDescription ?? "unknown error")")
-        changeGeneralState(changeTo: .DISCONNECTED)
+        changeConnectionState(newState: .DISCONNECTED)
         
     }
     
