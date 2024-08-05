@@ -1,5 +1,10 @@
 # Pinpoint-Easylocate-iOS-SDK Pod
 
+## Demo App
+We provided a a demo app to show the integration of the iOS SDK
+https://github.com/pinpoint-positioning/public-sdk-demo-app
+
+
 ## Installation
 
 To integrate the `Pinpoint-Easylocate-iOS-SDK` pod into your Xcode project using CocoaPods, specify it in your `Podfile`:
