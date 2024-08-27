@@ -498,8 +498,12 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
+        // Until 11.4
+        // let localName = advertisementData["kCBAdvDataLocalName"]
         
-        let localName = advertisementData["kCBAdvDataLocalName"]
+        // From 12.0
+        let localName = peripheral.name
+        
         if let peripheralName = localName {
             if traceletNames.contains(where: { (peripheralName as AnyObject).contains($0) }) {
                 if discoveredTracelets.contains(peripheral) {

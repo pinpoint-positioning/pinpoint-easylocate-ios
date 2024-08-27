@@ -12,7 +12,7 @@ import Combine
 public class Config: ObservableObject {
     public static let shared = Config()
     
-    public var uci:Bool = false
+    public var uci:Bool = true
     public var logToFile:Bool = false
 }
 
