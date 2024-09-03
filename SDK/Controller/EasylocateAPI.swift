@@ -568,7 +568,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             }
             
             let did = Int(bytes[0])
-           // let addr = Int(bytes[1]) << 8 | Int(bytes[2])
+           //let addr = Int(bytes[1]) << 8 | Int(bytes[2])
             let typeAndName = getDeviceTypeAndNamePrefixFromIdent(did: did)
             let name = "\(typeAndName.1)-\(String(format: "%02X%02X", bytes[2], bytes[1]))"
             
