@@ -107,7 +107,7 @@ public struct SiteData: Codable, Equatable {
         public var originLatitude:Double?
         public var originLongitude:Double?
         public var originAzimuth:Double?
-        public var uwbChannel = 0       
+        public var uwbChannel:Int?
 
     }
 
