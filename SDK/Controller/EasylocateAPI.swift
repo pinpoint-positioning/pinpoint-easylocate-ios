@@ -496,37 +496,100 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     
-    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
+    func getDeviceTypeAndNamePrefixFromIdent(did: Int) -> (String, String) {
+        var name = "unknown"
+        var deviceType = "unknown"
+        
+        switch did & 0xE {
+        case 0x0:
+            name = "SATlet"
+            deviceType = "satlet"
+        case 0x2:
+            name = "TRACElet"
+            deviceType = "tracelet"
+        case 0x4:
+            name = "quadTag"
+            deviceType = "tracelet" // Or another appropriate type
+        case 0xC:
+            name = "TRACEletDummy"
+            deviceType = "tracelet"
+        default:
+            break
+            // logger.log(type: .info, "Unknown device type from did & 0xE: \(String(format: "0x%02X", did & 0xE))")
+        }
+        
+        switch did {
+        case 0x25:
+            name = "TRACElet"
+            deviceType = "tracelet"
+        case 0x75:
+            name = "AnotherDevice" // Replace with correct name
+            deviceType = "tracelet" // Replace with correct type
+        default:
+            break
+            // logger.log(type: .info, "Unknown device type from did: \(String(format: "0x%02X", did))")
+        }
+        
+        // Suffix mapping
+        switch did >> 4 {
+        case 0:
+            name += "-Q1k"
+        case 1:
+            name += "-PP10"
+        case 2:
+            name += "-quadTag"
+        case 3:
+            name += "-Q3k"
+        case 4:
+            name += "-PP20"
+        case 5:
+            name += "-CarTag/SIO"
+        case 7:
+            name += "-SpecialSuffix" // Handle the specific case of 0x07
+        default:
+            break
+           // logger.log(type: .info, "Unknown suffix for name from did >> 4: \(String(format: "0x%02X", did >> 4))")
+        }
+
+        return (deviceType, name)
+    }
+
+    // Called when discovered a device during BLE scan
+    
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
-        // Until 11.4
-        // let localName = advertisementData["kCBAdvDataLocalName"]
         
-        // From 12.0
-        let localName = peripheral.name
         
-        if let peripheralName = localName {
-            if traceletNames.contains(where: { (peripheralName as AnyObject).contains($0) }) {
+        if let manufacturerData = advertisementData["kCBAdvDataManufacturerData"] as? Data {
+            let bytes = [UInt8](manufacturerData)
+            guard bytes.count >= 3 else {
+              //  print("Manufacturer data too short: \(bytes)")
+                return
+            }
+            
+            let did = Int(bytes[0])
+           // let addr = Int(bytes[1]) << 8 | Int(bytes[2])
+            let typeAndName = getDeviceTypeAndNamePrefixFromIdent(did: did)
+            let name = "\(typeAndName.1)-\(String(format: "%02X%02X", bytes[2], bytes[1]))"
+            
+            if traceletNames.contains(where: { name.contains($0) }) {
+                
                 if discoveredTracelets.contains(peripheral) {
-                    print("Tracelet \(localName ?? "") already in list")
+                    return
+                }
+                
+                if inProximity(RSSI) {
+                    logger.log(type: .info, "Tracelet \(name) in range. RSSI: \(RSSI)")
                     
-                } else {
-                    
-                    if inProximity(RSSI) {
-                        logger.log(type: .info, "Tracelet \(localName ?? "") in range. RSSI: \(RSSI)")
-                        
-                        // Find the index where to insert the peripheral based on RSSI
-                        var insertIndex = 0
-                        for (index, existingPeripheral) in discoveredTracelets.enumerated() {
-                            if let existingRSSI = existingPeripheral.value(forKey: "RSSI") as? NSNumber {
-                                if RSSI.intValue > existingRSSI.intValue {
-                                    insertIndex = index + 1
-                                }
+                    var insertIndex = 0
+                    for (index, existingPeripheral) in discoveredTracelets.enumerated() {
+                        if let existingRSSI = existingPeripheral.value(forKey: "RSSI") as? NSNumber {
+                            if RSSI.intValue > existingRSSI.intValue {
+                                insertIndex = index + 1
                             }
                         }
-                        
-                        // Insert the peripheral at the calculated index
-                        discoveredTracelets.insert(peripheral, at: insertIndex)
                     }
+                    discoveredTracelets.insert(peripheral, at: insertIndex)
                 }
             }
         }
