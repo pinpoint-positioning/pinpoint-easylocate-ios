@@ -574,6 +574,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             
             if traceletNames.contains(where: { name.contains($0) }) {
                 
+                // This avoid multiple entries of the same device in the list
                 if discoveredTracelets.contains(peripheral) {
                     return
                 }

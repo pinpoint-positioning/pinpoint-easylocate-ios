@@ -98,6 +98,8 @@ public struct SiteData: Codable, Equatable {
     }
 
     public struct Map: Codable, Equatable {
+        public var configName = ""
+        public var levelName = ""
         public var mapFile = ""
         public var mapFileOriginX = 0.0
         public var mapFileOriginY = 0.0
