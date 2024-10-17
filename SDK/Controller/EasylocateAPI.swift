@@ -338,7 +338,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         let buffer = await freezeBuffer()
         var messageFound = false
         for message in buffer {
-            if (getCmdByte(from: message.message) == cmdCode)  {
+            if (getCmdByte(from: message.message, uci: config.uci) == cmdCode)  {
                 messageFound = true
                 self.logger.log(type: .info, "Message found in \n Buffer: [\(await TraceletResponse().getVersionResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
@@ -431,13 +431,17 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     
     
-    private func getCmdByte(from data: Data) -> UInt8? {
-        let valMesssage = UCIDecoder().decode(data: data)
-        //   let valMesssage = Decoder().ValidateMessage(of: data)
+    private func getCmdByte(from data: Data, uci:Bool) -> UInt8? {
+        var valMessage = [UInt8]()
+        if uci {
+            valMessage = UCIDecoder().decode(data: data)
+        } else {
+            valMessage = Decoder().validateMessage(of: data)
+        }
         
         // Check if the valMesssage array is not empty and the index is within bounds
-        if !valMesssage.isEmpty{
-            return valMesssage[0]
+        if !valMessage.isEmpty{
+            return valMessage[0]
         } else {
             logger.log(type: .warning, "No command byte found")
             return nil
