@@ -548,39 +548,57 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             name += "-SpecialSuffix" // Handle the specific case of 0x07
         default:
             break
-           // logger.log(type: .info, "Unknown suffix for name from did >> 4: \(String(format: "0x%02X", did >> 4))")
+            // logger.log(type: .info, "Unknown suffix for name from did >> 4: \(String(format: "0x%02X", did >> 4))")
         }
-
+        
         return (deviceType, name)
     }
-
-    // Called when discovered a device during BLE scan
     
+    
+    // Helper func
+    func fmtOut(_ data: Data) -> String {
+        return data.map { String(format: "%02X", $0) }.joined(separator: ".")
+    }
+    
+    // Called when discovered a device during BLE scan
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
         
-        
+        // Check if manufacturer data exists
         if let manufacturerData = advertisementData["kCBAdvDataManufacturerData"] as? Data {
             let bytes = [UInt8](manufacturerData)
-            guard bytes.count >= 3 else {
-              //  print("Manufacturer data too short: \(bytes)")
-                return
-            }
             
-            let did = Int(bytes[0])
-           //let addr = Int(bytes[1]) << 8 | Int(bytes[2])
-            let typeAndName = getDeviceTypeAndNamePrefixFromIdent(did: did)
-            let name = "\(typeAndName.1)-\(String(format: "%02X%02X", bytes[2], bytes[1]))"
-            
-            if traceletNames.contains(where: { name.contains($0) }) {
-                
-                // This avoid multiple entries of the same device in the list
-                if discoveredTracelets.contains(peripheral) {
-                    return
-                }
-                
+            // Process only if device is in proximity
                 if inProximity(RSSI) {
-                    logger.log(type: .info, "Tracelet \(name) in range. RSSI: \(RSSI)")
+
+                    // Ensure there are enough bytes for COMPANY_ID and payload
+                    guard bytes.count >= 5 else {
+                      //  print("Manufacturer data too short: \(bytes)")
+                        return
+                    }
+                    
+                    // Extract Company ID (Little Endian)
+                    let extractedCompanyID = UInt16(bytes[1]) << 8 | UInt16(bytes[0])
+                    
+                    // Only process if the Company ID matches
+                    guard extractedCompanyID == ProtocolConstants.COMPANY_ID else {
+                     //   print("wrong company ID: \(extractedCompanyID)")
+                        return
+                    }
+
+                    // Get device type and name and deviceID (did)
+                    let did = Int(bytes[2])
+                    let typeAndName = getDeviceTypeAndNamePrefixFromIdent(did: did)
+                    let name = "\(typeAndName.1)-\(String(format: "%02X%02X", bytes[4], bytes[3]))"
+                    
+                    // Check for tracelets
+                    if typeAndName.0.contains(where: { name.contains($0) }) {
+                        if discoveredTracelets.contains(peripheral) {
+                         //   print("dropped \(peripheral)")
+                            return
+                        }
+                    
+                    logger.log(type: .info, "Found matching tracelet: \(name); Adv Data: \(fmtOut(manufacturerData.dropFirst(5))), RSSI: \(RSSI)")
                     
                     var insertIndex = 0
                     for (index, existingPeripheral) in discoveredTracelets.enumerated() {

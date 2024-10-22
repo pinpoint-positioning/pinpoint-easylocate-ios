@@ -21,6 +21,9 @@ public struct ProtocolConstants {
     // Protocol xor byte
     public static let  xorByte:UInt8 = 0x20
     
+    // BLE Adv CompanyID
+    public static let COMPANY_ID: UInt16 = 0x0E07
+    
 
     // Commands
     public static let cmdCodeShowMe:UInt8 = 0x19
