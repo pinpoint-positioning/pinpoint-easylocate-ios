@@ -110,7 +110,7 @@ class UCIDecoder {
         var decodedByteBuffer = [UInt8]()
         var currentHeader = [UInt8]()
         
-      //  print("Received raw data package: \(data)")
+        print("Received raw data package: \(data)")
         
         // Convert data to an array of UInt8
         let dataUInt8 = [UInt8](data)
@@ -143,7 +143,7 @@ class UCIDecoder {
                 if payloadLength == currentPayloadLength {
                     decodingState = .initial
                     if pbf == 0 { // the last packet of the message was received
-           //             print("Decoded data package: \(decodedByteBuffer)")
+                        print("Decoded data package: \(decodedByteBuffer)")
                         return decodedByteBuffer // Return decodedByteBuffer
                     }
                 }
@@ -178,114 +178,6 @@ class SerialDataPackage {
         return Int(data[0])
     }
 }
-
-enum UCIDecoderState {
-    case initial, running
-}
-
-class UCIDecoder {
-    var decodingState: UCIDecoderState = .initial
-    
-    /// Checks if a list([byteList]) of [UCIProtocolConstants.packetHeaderSize] bytes qualifies as a header.
-    func isHeader(byteList: [UInt8]) -> Bool {
-        // Octet 0: 3 bit mt (message type), 1 bit pbf (payload buffer flag), 4 bit gid (group identifier)
-        let mt = byteList[0] >> 5
-        if ![UInt8(UCIProtocolConstants.msgTypeCtrlNtfy), UInt8(UCIProtocolConstants.msgTypeCtrlResp)].contains(UInt8(mt)) {
-
-            return false
-        }
-        let gid = byteList[0] & 0xF
-        if gid != UCIProtocolConstants.gidVendEasylocateLegacy {
-            return false
-        }
-        // Octet 1: 2 bits reserved for future use, 6 for oid (opcode identifer)
-        let oid = byteList[1] & 0x3f
-        if oid != UCIProtocolConstants.oidVendEasylocateLegacy {
-            return false
-        }
-        return true
-    }
-    
-    /// Decode incoming serial data and extract pinpoint messages
-    /// Usage advices:
-    /// - use this only in a Device API object when you expect a certain message
-    func decode(data: Data) -> [UInt8] {
-        var pbf = 0
-        var currentPayloadLength = 0
-        var payloadLength = 0
-        var decodedByteBuffer = [UInt8]()
-        var currentHeader = [UInt8]()
-        
-        print("Received raw data package: \(data)")
-        
-        // Convert data to an array of UInt8
-        let dataUInt8 = [UInt8](data)
-        
-        // take each byte chunk and decode
-        for byte in dataUInt8 {
-            switch decodingState {
-            // header is not yet complete
-            case .initial:
-                currentHeader.append(byte)
-                // check if the header is complete
-                if currentHeader.count == UCIProtocolConstants.packetHeaderSize {
-                    let validHeader = isHeader(byteList: currentHeader)
-                    if validHeader {
-                        pbf = Int(currentHeader[0] >> 4 & 0x1)
-                        payloadLength = Int(currentHeader[3])
-                        currentPayloadLength = 0
-                        decodingState = .running
-                    } else {
-                        print("\(currentHeader) is not a valid header! Received bytes of an incomplete message.")
-                        currentHeader.removeAll()
-                        decodedByteBuffer.removeAll()
-                    }
-                }
-            // header is complete, receiving payload
-            case .running:
-                currentPayloadLength += 1
-                decodedByteBuffer.append(byte)
-                // check if the payload is complete
-                if payloadLength == currentPayloadLength {
-                    decodingState = .initial
-                    if pbf == 0 { // the last packet of the message was received
-                        print("Decoded data package: \(decodedByteBuffer)")
-                        return decodedByteBuffer // Return decodedByteBuffer
-                    }
-                }
-            }
-        }
-        
-        return decodedByteBuffer // Return decodedByteBuffer
-    }
-
-
-}
-
-    
-    
-    
-    struct SerialDataPackageError: Error {
-        var localizedDescription: String
-    }
-    
-    class SerialDataPackage {
-        var timestamp: Int
-        var data: [UInt8]
-        
-        init(timestamp: Int, data: [UInt8]) {
-            self.timestamp = timestamp
-            self.data = data
-        }
-        
-        /// Get command code (message type) from received data.
-        func getCommandCode() throws -> Int {
-            guard !data.isEmpty else {
-                throw SerialDataPackageError(localizedDescription: "Cannot get command code from received data package.")
-            }
-            return Int(data[0])
-        }
-    }
 
 
 //MARK: - Extensions

@@ -24,8 +24,6 @@ public struct ProtocolConstants {
     // BLE Adv CompanyID
     public static let COMPANY_ID: UInt16 = 0x0E07
     
-    public static let uwbConfigIndex = 2
-    
 
     // Commands
     public static let cmdCodeShowMe:UInt8 = 0x19
