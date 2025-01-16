@@ -90,7 +90,7 @@ public class TraceletResponse {
     //MARK: - Get Satus Response
     
     
-    func GetStatusResponse (from byteArray: Data) -> TraceletStatus {        
+    func GetStatusResponse (from byteArray: Data) -> TraceletStatus {
         
         var valByteArray = (config.uci  ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
