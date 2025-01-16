@@ -110,7 +110,7 @@ class UCIDecoder {
         var decodedByteBuffer = [UInt8]()
         var currentHeader = [UInt8]()
         
-        print("Received raw data package: \(data)")
+      //  print("Received raw data package: \(data)")
         
         // Convert data to an array of UInt8
         let dataUInt8 = [UInt8](data)
@@ -143,7 +143,7 @@ class UCIDecoder {
                 if payloadLength == currentPayloadLength {
                     decodingState = .initial
                     if pbf == 0 { // the last packet of the message was received
-                        print("Decoded data package: \(decodedByteBuffer)")
+           //             print("Decoded data package: \(decodedByteBuffer)")
                         return decodedByteBuffer // Return decodedByteBuffer
                     }
                 }

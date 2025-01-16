@@ -110,6 +110,7 @@ public struct SiteData: Codable, Equatable {
         public var originLongitude:Double?
         public var originAzimuth:Double?
         public var uwbChannel:Int?
+        public var uwbPreambleIndex:Int?
 
     }
 
@@ -149,4 +150,12 @@ public enum LogType {
    case warning
    case error
    
+}
+
+public enum ConnectionError: Error {
+    case alreadyConnected
+    case configurationFailed
+    case unknownConnectionSource
+    case characteristicsNotFound
+    case peripheralError(Error)
 }
