@@ -14,6 +14,8 @@ import SwiftUI
 
 public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate, ObservableObject {
     public static let shared = EasylocateAPI()
+    private var centralManager: CBCentralManager!
+    private var satletScanner: SatletScanner!
     
     @Published public var connectionState:ConnectionState = .DISCONNECTED
     @Published public var bleState = BLEState.UNKNOWN
@@ -26,16 +28,16 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     private let logger = Logging.shared
     private var messageBuffer = [BufferElement]()
     private var discoveredTracelets = [CBPeripheral]()
-    private var centralManager: CBCentralManager!
     private var rxCharacteristic: CBCharacteristic?
     private let traceletNames = ["dwTag", "dw3kTag", "Quad", "quad"]
+    private var automaticConfiguration:Bool = false
     
     
     private override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
-        centralManager.delegate = self
-        logger.log(type: .info, "SDK initiated: \n  BT-state: \(bleState)")
+        satletScanner = SatletScanner(centralManager: centralManager)
+        print("SDK initiated. BT-state: \(centralManager.state.rawValue)")
     }
     
     
@@ -47,6 +49,8 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     ///   - timeout: timeout for the scan in seconds
     ///   - completion: returns a list of nearby tracelets as [CBPeripheral]
     public func scan(timeout: Double, completion: @escaping (([CBPeripheral]) -> Void)) {
+        automaticConfiguration = false
+        
         guard bleState == .BT_OK else {
             logger.log(type: .error, "Bluetooth not available: \(bleState)")
             return
@@ -91,6 +95,18 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
     }
     
+    public func automaticConfigurationScan(timeout: TimeInterval = 3.0, completion: @escaping ((channel: UInt8, preamble: UInt8, siteID: UInt16)?) -> Void) {
+        automaticConfiguration = true
+        satletScanner.scanForConfig(timeout: timeout) { mostFrequentConfig in
+            if let config = mostFrequentConfig {
+                print("Most frequent configuration selected: Channel \(config.channel), Preamble \(config.preamble), SiteID \(config.siteID)")
+            } else {
+                print("No valid configuration was found during the scan.")
+            }
+            completion(mostFrequentConfig)
+        }
+    }
+
     
     
     /// Stops the scaning process for nearby tracelets
@@ -128,16 +144,16 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     /// Starts a connection attempt to a nearby tracelet and starts positioning
     /// - Parameter device: Pass a discovered tracelet-object
-    public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool{
+    public func connectAndStartPositioning(device: CBPeripheral) async throws -> Bool {
         changeConnectionState(newState: .CONNECTING)
         connectionSource = .connectAndStartPositioning
-        
+
         logger.log(type: .info, "Connection attempt initiated")
         guard connectionState != ConnectionState.CONNECTED else {
             logger.log(type: .warning, "Already connected")
-            return false
+            throw ConnectionError.alreadyConnected
         }
-        
+
         return try await withCheckedThrowingContinuation { cont in
             self.connectContinuation = cont
             centralManager.connect(device, options: nil)
@@ -156,6 +172,8 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         connectedTracelet = nil
     }
     
+    
+
     
     
     /// Sends a ShowMe -command to the tracelet
@@ -208,10 +226,9 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     /// Sets the Channel to 5 or 9
     /// - Parameter channel: channel 5 or 9
-    public func setChannel(channel:Int8, preamble:Int8 = 9) -> Bool {
-        let Uint8Channel: UInt8 = UInt8(bitPattern: channel)
-        let Uint8preamble: UInt8 = UInt8(bitPattern: preamble)
-        let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetChannel, Uint8Channel, Uint8preamble]
+    @discardableResult
+    public func setChannel(channel:UInt8, preamble:UInt8) -> Bool {
+        let dataArray:[UInt8] = [ProtocolConstants.cmdCodeSetChannel, channel, preamble]
         var success = false
         
         if let tracelet = connectedTracelet {
@@ -227,7 +244,8 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     /// Sets the SiteID to listen to
     /// - Parameter channel: siteID eg. 0x0001
-    public func setSiteID(siteID: UInt16) async -> Bool {
+    @discardableResult
+    public func setSiteID(siteID: UInt16) -> Bool {
         var success = false
         // Ensure that siteID is within the range of UInt16
         guard siteID <= UInt16(Int16.max) else {
@@ -340,7 +358,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         for message in buffer {
             if (getCmdByte(from: message.message) == cmdCode)  {
                 messageFound = true
-                self.logger.log(type: .info, "Message found in \n Buffer: [\(await TraceletResponse().getVersionResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return message.message
             }
@@ -368,6 +385,8 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         }
         let encData = (config.uci ?  UCIEncoder().encodeBytes(Data(data)): Encoder.encodeByte(Data(data)))
         if let rxCharacteristic = rxCharacteristic {
+            logger.log(type: .info, "Sent \(encData.hexEncodedString())")
+            logger.log(type: .info, "lenght \(encData.count)")
             tracelet.writeValue(encData, for: rxCharacteristic,type: CBCharacteristicWriteType.withResponse)
             success = true
         }
@@ -376,13 +395,14 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     private func storeInBuffer(data:BufferElement) {
         
-        if (messageBuffer.count > 10)
+        if (messageBuffer.count > 20)
         {
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
         
     }
+    
     
     
     private func freezeBuffer() async -> [BufferElement]  {
@@ -448,6 +468,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     private func changeConnectionState(newState:ConnectionState) {
         DispatchQueue.main.async {
             self.connectionState = newState
+            self.logger.log(type: .info, "Change Connection State to \(newState)")
         }
     }
     
@@ -509,7 +530,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             deviceType = "tracelet"
         case 0x4:
             name = "quadTag"
-            deviceType = "tracelet" // Or another appropriate type
+            deviceType = "tracelet"
         case 0xC:
             name = "TRACEletDummy"
             deviceType = "tracelet"
@@ -523,8 +544,8 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
             name = "TRACElet"
             deviceType = "tracelet"
         case 0x75:
-            name = "AnotherDevice" // Replace with correct name
-            deviceType = "tracelet" // Replace with correct type
+            name = "AnotherDevice"
+            deviceType = "unknown"
         default:
             break
             // logger.log(type: .info, "Unknown device type from did: \(String(format: "0x%02X", did))")
@@ -560,57 +581,39 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         return data.map { String(format: "%02X", $0) }.joined(separator: ".")
     }
     
-    // Called when discovered a device during BLE scan
-    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber) {
         peripheral.delegate = self
-        
-        // Check if manufacturer data exists
-        if let manufacturerData = advertisementData["kCBAdvDataManufacturerData"] as? Data {
-            let bytes = [UInt8](manufacturerData)
-            
-            // Process only if device is in proximity
-                if inProximity(RSSI) {
 
-                    // Ensure there are enough bytes for COMPANY_ID and payload
-                    guard bytes.count >= 5 else {
-                      //  print("Manufacturer data too short: \(bytes)")
-                        return
-                    }
-                    
-                    // Extract Company ID (Little Endian)
-                    let extractedCompanyID = UInt16(bytes[1]) << 8 | UInt16(bytes[0])
-                    
-                    // Only process if the Company ID matches
-                    guard extractedCompanyID == ProtocolConstants.COMPANY_ID else {
-                     //   print("wrong company ID: \(extractedCompanyID)")
-                        return
-                    }
+        // Retrieve and validate manufacturer data
+        guard let manufacturerData = advertisementData["kCBAdvDataManufacturerData"] as? Data, manufacturerData.count >= 5 else { return }
 
-                    // Get device type and name and deviceID (did)
-                    let did = Int(bytes[2])
-                    let typeAndName = getDeviceTypeAndNamePrefixFromIdent(did: did)
-                    let name = "\(typeAndName.1)-\(String(format: "%02X%02X", bytes[4], bytes[3]))"
-                    
-                    // Check for tracelets
-                    if typeAndName.0.contains(where: { name.contains($0) }) {
-                        if discoveredTracelets.contains(peripheral) {
-                         //   print("dropped \(peripheral)")
-                            return
-                        }
-                    
-                    logger.log(type: .info, "Found matching tracelet: \(name); Adv Data: \(fmtOut(manufacturerData.dropFirst(5))), RSSI: \(RSSI)")
-                    
-                    var insertIndex = 0
-                    for (index, existingPeripheral) in discoveredTracelets.enumerated() {
-                        if let existingRSSI = existingPeripheral.value(forKey: "RSSI") as? NSNumber {
-                            if RSSI.intValue > existingRSSI.intValue {
-                                insertIndex = index + 1
-                            }
-                        }
-                    }
-                    discoveredTracelets.insert(peripheral, at: insertIndex)
-                }
+        let bytes = [UInt8](manufacturerData)
+        let companyID = UInt16(bytes[1]) << 8 | UInt16(bytes[0])
+
+        // Ensure the company ID matches ours
+        guard companyID == ProtocolConstants.COMPANY_ID else { return }
+
+        let deviceID = Int(bytes[2])
+        let (deviceType, namePrefix) = getDeviceTypeAndNamePrefixFromIdent(did: deviceID)
+        let name = "\(namePrefix)-\(String(format: "%02X%02X", bytes[4], bytes[3]))"
+
+        switch deviceType {
+        case "tracelet":
+            // Only process tracelet if automaticConfiguration is false and in proximity
+            if !automaticConfiguration, inProximity(RSSI), !discoveredTracelets.contains(peripheral) {
+                logger.log(type: .info, "Found matching tracelet: \(name); Adv Data: \(fmtOut(manufacturerData.dropFirst(5))), RSSI: \(RSSI)")
+                discoveredTracelets.append(peripheral)
             }
+
+        case "satlet":
+            // If automaticConfiguration is true, process satlet data
+            if automaticConfiguration {
+                satletScanner.processAdvertisementData(peripheral: peripheral, advertisementData: advertisementData, rssi: RSSI)
+            }
+
+        default:
+            logger.log(type: .info, "Unknown device type found: \(deviceType), name: \(name)")
         }
     }
     
@@ -650,58 +653,78 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     // Delegate - Called when chars are discovered
     
     public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        if let characteristics = service.characteristics {
-            for characteristic in characteristics {
-                // Get Characteristics and store in vars
-                if characteristic.uuid == UUIDs.traceletTxChar {
-                    logger.log(type: .info, "Found TX-Char: \(characteristic.uuid)")
-                    
-                    if characteristic.properties.contains(.notify) {
-                        
-                        // Moved to StartPositioning()
-                        peripheral.setNotifyValue(true, for: characteristic)
-                        changeComState(newState: .WAITING_FOR_RESPONSE)
-                        
-                        
+        if let error = error {
+            logger.log(type: .error, "Error discovering characteristics: \(error.localizedDescription)")
+            if let cont = connectContinuation {
+                cont.resume(throwing: ConnectionError.peripheralError(error))
+                self.connectContinuation = nil
+            }
+            return
+        }
+
+        guard let characteristics = service.characteristics else {
+            logger.log(type: .error, "No characteristics found for service: \(service.uuid)")
+            if let cont = connectContinuation {
+                cont.resume(throwing: ConnectionError.characteristicsNotFound)
+                self.connectContinuation = nil
+            }
+            return
+        }
+
+        for characteristic in characteristics {
+            if characteristic.uuid == UUIDs.traceletTxChar {
+                logger.log(type: .info, "Found TX-Char: \(characteristic.uuid)")
+
+                if characteristic.properties.contains(.notify) {
+                    peripheral.setNotifyValue(true, for: characteristic)
+                    changeComState(newState: .WAITING_FOR_RESPONSE)
+                }
+            } else if characteristic.uuid == UUIDs.traceletRxChar {
+                logger.log(type: .info, "Found RX-Char: \(characteristic.uuid)")
+                rxCharacteristic = characteristic
+
+                switch connectionSource {
+                case .regularConnect:
+                    logger.log(type: .info, "Regular connect action")
+                    if let cont = connectContinuation {
+                        cont.resume(returning: true)
+                        self.connectContinuation = nil
+                    }
+                    stopPositioning()
+
+                case .connectAndStartPositioning:
+                    logger.log(type: .info, "Connect and start positioning action")
+                    automaticConfigurationScan { config in
+                        if let config = config {
+                            let channel = config.channel
+                            let preamble = config.preamble
+                            let siteID = config.siteID
+
+                            self.setChannel(channel: channel, preamble: preamble)
+                            self.setSiteID(siteID: siteID)
+                            self.startPositioning()
+
+                            if let cont = self.connectContinuation {
+                                cont.resume(returning: true)
+                                self.connectContinuation = nil
+                            }
+                        } else {
+                            self.logger.log(type: .error, "Automatic configuration failed. Unable to continue positioning.")
+                            if let cont = self.connectContinuation {
+                                cont.resume(throwing: ConnectionError.configurationFailed)
+                                self.connectContinuation = nil
+                            }
+                        }
+                    }
+
+                case .none:
+                    logger.log(type: .warning, "Unknown connection action")
+                    if let cont = connectContinuation {
+                        cont.resume(throwing: ConnectionError.unknownConnectionSource)
+                        self.connectContinuation = nil
                     }
                 }
-                else if characteristic.uuid == UUIDs.traceletRxChar {
-                    
-                    logger.log(type: .info, "Found RX-Char: \(characteristic.uuid)")
-                    rxCharacteristic = characteristic
-                    
-                    switch connectionSource {
-                    case .regularConnect:
-                        logger.log(type: .info, "Regular connect action")
-                        
-                        // If the RX Char is found, then continue the cont to return true to the connect-function
-                        if let cont = connectContinuation {
-                            cont.resume(returning: true)
-                            self.connectContinuation = nil
-                        }
-                        //StopPos on regular connect
-                        stopPositioning()
-                        
-                        
-                    case .connectAndStartPositioning:
-                        logger.log(type: .info, "Connect and start positioning action")
-                        // If the TX Char is found, then continue the cont to return true to the connect-function
-                        if let cont = connectContinuation {
-                            cont.resume(returning: true)
-                            self.connectContinuation = nil
-                        }
-                        //StartPos on ConnectAndStartPositioning
-                        startPositioning()
-                        
-                        
-                    case .none:
-                        logger.log(type: .warning, "Unkown connection action")
-                        // self.connectContinuation = nil
-                    }
-                    // Reset connection source
-                    connectionSource = nil
-                    
-                }
+                connectionSource = nil
             }
         }
     }
