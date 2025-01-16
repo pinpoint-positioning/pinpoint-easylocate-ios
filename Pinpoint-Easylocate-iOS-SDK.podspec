@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "Pinpoint-Easylocate-iOS-SDK"
-  spec.version      = "12.1.0.2"
+  spec.version      = "12.1.0.3"
   spec.summary      = "A iOS SDK for Pinpoint devices"
 
   # This description is used to generate tags and improve search results.
