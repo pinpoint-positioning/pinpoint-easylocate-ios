@@ -39,13 +39,13 @@ public struct TraceletStatus {
     public var batteryState: UInt8
     public var batteryLevel: UInt8
     public var txLateCnt: Int16
-    public var flagsByte: UInt8
+    public var flagsByte: Int16
     public var uwbChannel: UInt8
     public var preambleRxCode: UInt8
     public var preambleTxCode: UInt8
 
 
-    public init(role: String = "", address: String = "", siteIDe: String = "", panID: String = "", posX: Int16 = 0, posY: Int16 = 0, posZ: Int16 = 0, stateByte: UInt8 = 0, syncStateByte: UInt8 = 0, syncSlot: UInt8 = 0, syncModeByte: UInt8 = 0, motionStateByte: UInt8 = 0, batteryState: UInt8 = 0, batteryLevel: UInt8 = 0, txLateCnt: Int16 = 0, flagsByte: UInt8 = 0, uwbChannel: UInt8 = 0, preambleRxCode: UInt8 = 0, preambleTxCode: UInt8 = 0) {
+    public init(role: String = "", address: String = "", siteIDe: String = "", panID: String = "", posX: Int16 = 0, posY: Int16 = 0, posZ: Int16 = 0, stateByte: UInt8 = 0, syncStateByte: UInt8 = 0, syncSlot: UInt8 = 0, syncModeByte: UInt8 = 0, motionStateByte: UInt8 = 0, batteryState: UInt8 = 0, batteryLevel: UInt8 = 0, txLateCnt: Int16 = 0, flagsByte: Int16 = 0, uwbChannel: UInt8 = 0, preambleRxCode: UInt8 = 0, preambleTxCode: UInt8 = 0) {
         self.role = role
         self.address = address
         self.siteIDe = siteIDe

@@ -119,10 +119,10 @@ public class TraceletResponse {
         let txLateCntRange = Array(valByteArray[20...21])   // 2 Byte
         let _ = valByteArray[23] // one byte, 23 fHndRange
         let _ = valByteArray[24]   // one byte, 24 cHndRange
-        let flagsByteRange = valByteArray[25]  // one byte, 25
-        let uwbChannelRange = valByteArray[26]  // one byte, 26
-        let preambleTxCodeRange = valByteArray[27]   // one byte, 27
-        let preambleRxCodeRange  = valByteArray[28]  // one byte, 28
+        let flagsByteRange = Array(valByteArray[20...28]) // four bytes, 25, 26, 27, 28
+        let uwbChannelRange = valByteArray[29]  // one byte, 26
+        let preambleTxCodeRange = valByteArray[30]   // one byte, 27
+        let preambleRxCodeRange  = valByteArray[31]  // one byte, 28
         
         
         // Get Bytes from Range
@@ -152,7 +152,10 @@ public class TraceletResponse {
         let txLateCnt = txLateCntRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
-        let flagsByte = UInt8(flagsByteRange.littleEndian)
+        let flagsByte = flagsByteRange.withUnsafeBytes({
+            (rawPtr: UnsafeRawBufferPointer) in
+            return rawPtr.load(as: Int16.self).littleEndian })
+
         let uwbChannel = UInt8(uwbChannelRange.littleEndian)
         let preambleTxCode = UInt8(preambleTxCodeRange.littleEndian)
         let preambleRxCode  = UInt8(preambleRxCodeRange.littleEndian)
@@ -206,7 +209,7 @@ public class TraceletResponse {
             }
         } else {
             logger.log(type: .warning, "Received unknown response to version request")
-            return TraceletVersion(version: "")
+            return TraceletVersion(version: "unkown")
         }
         
     }
