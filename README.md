@@ -10,7 +10,6 @@ https://github.com/pinpoint-positioning/public-sdk-demo-app
 To integrate the `Pinpoint-Easylocate-iOS-SDK` pod into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
 
-
 ```ruby
 # Uncomment the next line to define a global platform for your project
 # platform :ios, '9.0'
