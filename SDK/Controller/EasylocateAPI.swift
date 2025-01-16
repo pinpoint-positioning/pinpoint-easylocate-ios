@@ -358,7 +358,6 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
         for message in buffer {
             if (getCmdByte(from: message.message) == cmdCode)  {
                 messageFound = true
-                self.logger.log(type: .info, "Message found in \n Buffer: [\(await TraceletResponse().getVersionResponse(from: message.message))]")
                 self.messageBuffer.removeAll()
                 return message.message
             }
@@ -396,13 +395,14 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     
     private func storeInBuffer(data:BufferElement) {
         
-        if (messageBuffer.count > 10)
+        if (messageBuffer.count > 20)
         {
             messageBuffer.removeFirst()
         }
         messageBuffer.append(data)
         
     }
+    
     
     
     private func freezeBuffer() async -> [BufferElement]  {
@@ -468,6 +468,7 @@ public class EasylocateAPI: NSObject, CBCentralManagerDelegate, CBPeripheralDele
     private func changeConnectionState(newState:ConnectionState) {
         DispatchQueue.main.async {
             self.connectionState = newState
+            self.logger.log(type: .info, "Change Connection State to \(newState)")
         }
     }
     
