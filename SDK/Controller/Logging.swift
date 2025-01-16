@@ -1,21 +1,12 @@
 import OSLog
 import Foundation
-import UIKit
 
-
- public enum LogType {
-    case info
-    case warning
-    case error
-    
-}
 
 public class Logging {
     
     public static let shared = Logging()
-    public init() {}
+    let config = Config.shared
     
-
     
     public func log(type: LogType, _ message: String, functionName: String = #function) {
         let date = Date()
@@ -24,11 +15,13 @@ public class Logging {
         let dateString = dateFormatter.string(from: date)
         let content = "[\(type)] \(dateString): \(functionName) - \(message)\n"
         
-       // Log to OS
+        // Log to OS
         Logger.debug.error("\(content)")
         
-        // Log to file
-        logToFile(content)
+        // Optionally log to file
+        if config.logToFile{
+            logToFile(content)
+        }
     }
     
     private func logToFile(_ content: String) {
@@ -49,27 +42,6 @@ public class Logging {
             print("Error writing to log file: \(error)")
         }
     }
-
-    
-
-    
-    private func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
-    }
-
-
-    public func openDir() {
-        let documentsUrl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let filename = getDocumentsDirectory().appendingPathComponent("positionLog\(Date()).txt")
-        
-        if let sharedUrl = URL(string: "shareddocuments://\(documentsUrl.path)") {
-            if UIApplication.shared.canOpenURL(sharedUrl) {
-                UIApplication.shared.open(filename, options: [:])
-            }
-        }
-    }
-    
     
     public func clearLogFile() {
         let documentDirectory = getDocumentsDirectory()
@@ -80,17 +52,24 @@ public class Logging {
             print("Error clearing log file: \(error.localizedDescription)")
         }
     }
-
+    
 }
 
 
-extension Logger {
-    /// Using your bundle identifier is a great way to ensure a unique identifier.
-    private static var subsystem = Bundle.main.bundleIdentifier!
 
+private func getDocumentsDirectory() -> URL {
+    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    return paths[0]
+}
+
+
+
+extension Logger {
+    private static let subsystem = Bundle.main.bundleIdentifier!
+    
     /// Logs the view cycles like a view that appeared.
     static let viewCycle = Logger(subsystem: subsystem, category: "viewcycle")
-
+    
     /// All logs related to tracking and analytics.
     static let statistics = Logger(subsystem: subsystem, category: "statistics")
     

@@ -21,6 +21,11 @@ public struct ProtocolConstants {
     // Protocol xor byte
     public static let  xorByte:UInt8 = 0x20
     
+    // BLE Adv CompanyID
+    public static let COMPANY_ID: UInt16 = 0x0E07
+    
+    public static let uwbConfigIndex = 2
+    
 
     // Commands
     public static let cmdCodeShowMe:UInt8 = 0x19
@@ -33,10 +38,25 @@ public struct ProtocolConstants {
     public static let cmdCodeSetChannel:UInt8 = 0x27
     public static let cmdCodeSetSiteID:UInt8 = 0x25
     
-    
-    
     // Message Indicators
     public static let cmdCodePosition:UInt8 = 0x97
     public static let cmdCodeStatus:UInt8 =  0x92
     public static let cmdCodeVersion:UInt8 = 0x94
     }
+
+
+    public struct UCIProtocolConstants {
+    static let maxPayloadSize: UInt8 = 255
+    static let packetHeaderSize: UInt8 = 4
+    static let packetSize: UInt8 = maxPayloadSize + packetHeaderSize
+    static let messageSize: Int = 512
+
+    static let msgTypeData: UInt8 = 0
+    static let msgTypeCtrlCmd: UInt8 = 1
+    static let msgTypeCtrlResp: UInt8 = 2
+    static let msgTypeCtrlNtfy: UInt8 = 3
+
+    static let gidVendEasylocateLegacy: UInt8 = 0xA
+    static let oidVendEasylocateLegacy: UInt8 = 0x25
+}
+

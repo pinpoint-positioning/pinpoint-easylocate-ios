@@ -10,24 +10,20 @@
 import Foundation
 import CoreBluetooth
 
- class AsyncLocationStream: NSObject {
+class AsyncLocationStream: NSObject {
     
-     static let shared = AsyncLocationStream()
-
+    static let shared = AsyncLocationStream()
     
-    var continuation: AsyncStream<TL_PositionResponse>.Continuation?
-
-        public lazy var stream: AsyncStream<TL_PositionResponse> = {
-            AsyncStream { (continuation: AsyncStream<TL_PositionResponse>.Continuation) -> Void in
-                self.continuation = continuation
-                /// Configure a termination callback to understand the lifetime of your stream.
-                continuation.onTermination = { @Sendable status in
-                    print("Stream terminated with status \(status)")
-                }
+    
+    var continuation: AsyncStream<TraceletPosition>.Continuation?
+    
+    public lazy var stream: AsyncStream<TraceletPosition> = {
+        AsyncStream { (continuation: AsyncStream<TraceletPosition>.Continuation) -> Void in
+            self.continuation = continuation
+            continuation.onTermination = { @Sendable status in
+                print("Stream terminated with status \(status)")
             }
-        }()
-    
-    
-
-    }
+        }
+    }()
+}
 

@@ -12,7 +12,7 @@ public class WGS84Position {
     let meanRadius: Double
     let refAzimuthRadians: Double
     let refLatitudeRadians: Double
-
+    
     public init(refLatitude: Double, refLongitude: Double, refAzimuth: Double) {
         self.refLatitude = refLatitude
         self.refLongitude = refLongitude
@@ -21,7 +21,7 @@ public class WGS84Position {
         self.refAzimuthRadians = refAzimuth * Double.pi / 180.0
         self.refLatitudeRadians = refLatitude * Double.pi / 180.0
     }
-
+    
     public func getWGS84Position(uwbPosition: CGPoint) -> CLLocationCoordinate2D {
         let radiusLat = 1 / sqrt(1 / pow(equatorialRadius, 2) +
                                  pow(tan(Double(refLatitudeRadians)), 2) / pow(polarRadius, 2))
@@ -29,12 +29,10 @@ public class WGS84Position {
         let deltaY = -uwbPosition.x * sin(Double(refAzimuthRadians)) + uwbPosition.y * cos(Double(refAzimuthRadians))
         let deltaLon = 360.0 * deltaX / (2 * Double.pi * radiusLat)
         let deltaLat = 360.0 * deltaY / (2 * Double.pi * meanRadius)
-
+        
         let newLatitude = refLatitude + deltaLat
         let newLongitude = refLongitude + deltaLon
-
+        
         return CLLocationCoordinate2D(latitude: newLatitude, longitude: newLongitude)
     }
 }
-
-// Add test Case TestCase example flutter sdk test/utils/geotools

@@ -7,20 +7,15 @@
 
 import Foundation
 
-
  class Encoder {
     
-    let logger = Logging()
-
-  // TODO put encodeByte and encodeBytes together
-
-     
      // Encode single byte
      // CRC Checksum included
      
-         static func encodeByte(_ byte: UInt8) -> Data {
-             var encBytes = [UInt8]()
+     static func encodeByte(_ data: Data) -> Data {
+         var encBytes = [UInt8]()
 
+         for byte in data {
              if byte == ProtocolConstants.startByte ||
                  byte == ProtocolConstants.stopByte ||
                  byte == ProtocolConstants.escapeByte {
@@ -29,44 +24,19 @@ import Foundation
              } else {
                  encBytes.append(byte)
              }
-             let checksum = calcChecksum([byte])
-             encBytes.append(contentsOf: checksum)
-             encBytes.insert(ProtocolConstants.startByte, at: 0)
-             encBytes.append(ProtocolConstants.stopByte)
-             return Data(encBytes)
          }
-     
-     
-     
-     
-  // Encode single byte - Not i use in API
-// NO CRC!
-     
-     
-   static func encodeByte_old(_ byte: UInt8) -> Data {
-    if byte == ProtocolConstants.startByte ||
-        byte == ProtocolConstants.stopByte ||
-        byte == ProtocolConstants.escapeByte {
-      let encodedByte = UInt64(ProtocolConstants.startByte) |
-                        UInt64(ProtocolConstants.escapeByte) << 8 |
-                        UInt64(ProtocolConstants.xorByte ^ byte) << 16 |
-                        UInt64(ProtocolConstants.stopByte) << 24
-      return withUnsafeBytes(of: encodedByte) { Data($0) }
-    } else {
-      let encodedByte = UInt64(ProtocolConstants.startByte) |
-                        UInt64(byte) << 8 |
-                        UInt64(ProtocolConstants.stopByte) << 16
-      return withUnsafeBytes(of: encodedByte) { Data($0) }
-    }
-  }
-     
-     
-     
-     
 
-  // Encode byte array
-    // NO CRC Yet
-     // Maybe not even needed for tracelet
+         let checksum = calcChecksum(data)
+         encBytes.append(contentsOf: checksum)
+         encBytes.insert(ProtocolConstants.startByte, at: 0)
+         encBytes.append(ProtocolConstants.stopByte)
+         return Data(encBytes)
+     }
+
+   
+ 
+     // Encode byte array
+
    static func encodeBytes(_ bytes: [UInt8]) -> Data {
  
     var bytesAsHex = ""
@@ -90,7 +60,7 @@ import Foundation
       }
     }
        
-    let checksum = calcChecksum(bytes)
+    let checksum = calcChecksum(Data(bytes))
     
     encBytes.append(contentsOf: checksum)
     encBytes.append(ProtocolConstants.stopByte)
@@ -105,21 +75,85 @@ import Foundation
     return encodedData
   }
      
-     
-     
-     
-     
-     
-     static func calcChecksum(_ bytes: [UInt8]) -> [UInt8] {
+
+     static func calcChecksum(_ data: Data) -> Data {
          var sum: UInt16 = 0
-         for byte in bytes {
+         for byte in data {
              sum += UInt16(byte)
          }
-         let checksum = withUnsafeBytes(of: sum.littleEndian, Array.init)
-         return checksum
+         let checksumBytes = withUnsafeBytes(of: sum.littleEndian, Array.init)
+         return Data(checksumBytes)
      }
+
      
 }
 
-    
 
+// Valid vom Firmware 11.4
+
+class UCIEncoder {
+    let logger = Logging.shared
+    
+    func encodeBytes(_ data: Data) -> Data {
+        var encBytes = [UInt8]()
+        logger.log(type: .info, "Data package to encode:  \(data.hexEncodedString())")
+        
+        if data.isEmpty {
+            return Data()
+        }
+        
+        var pbf: Int = 0
+        let payloadList = data.slices(size: Int(UCIProtocolConstants.maxPayloadSize))
+        let totalCount = payloadList.count
+        var currentCount = 0
+        
+        for payload in payloadList {
+            currentCount += 1
+            if payload != payloadList.last {
+                pbf = 1
+            } else {
+                pbf = 0
+            }
+            logger.log(type:.info, "Encoding payload \(currentCount) of \(totalCount)...")
+            encBytes.append(contentsOf: UCIEncoder.encodePayload(payload: payload, pbf: pbf))
+        }
+        print("Encoded data package: \(encBytes)")
+        return Data(encBytes)
+    }
+    
+    
+    static func encodePayload(payload: Data, pbf: Int) -> Data {
+        let octet0:UInt8 = (UCIProtocolConstants.msgTypeCtrlCmd << 5) | (UInt8(pbf) << 4) | UCIProtocolConstants.gidVendEasylocateLegacy
+        let octet1:UInt8 = (UCIProtocolConstants.oidVendEasylocateLegacy)
+        let octet2:UInt8 = 0
+        let octet3:UInt8 = UInt8(payload.count)
+        let header = Data([octet0, octet1,octet2, octet3])
+        let encodedPacket = header + payload.map { UInt8($0) }
+
+        print("Encoded packet: \(encodedPacket)")
+
+        return Data(encodedPacket)
+    }
+}
+
+extension Data {
+    func slices(size: Int) -> [Data] {
+        return stride(from: 0, to: count, by: size).map {
+            let startIndex = self.index(self.startIndex, offsetBy: $0)
+            let endIndex = self.index(startIndex, offsetBy: size, limitedBy: self.endIndex) ?? self.endIndex
+            return self[startIndex..<endIndex]
+        }
+    }
+    
+    func hexEncodedString() -> String {
+        return map { String(format: "%02hhx", $0) }.joined()
+    }
+}
+
+extension Array {
+    func slices(size: Int) -> [[Element]] {
+        return stride(from: 0, to: self.count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, self.count)])
+        }
+    }
+}

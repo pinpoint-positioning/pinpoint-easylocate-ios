@@ -6,21 +6,22 @@
 //
 
 import Foundation
+import SwiftUI
 
 
 public class TraceletResponse {
     
     public init () {}
     
-    let logger = Logging()
+    let logger = Logging.shared
+    @ObservedObject var config = Config.shared
+    
     
     //MARK: - Get Position Response
     
-    public func GetPositionResponse (from byteArray: Data) -> TL_PositionResponse {
+    public func GetPositionResponse (from byteArray: Data) -> TraceletPosition {
         
-        // Remove?
-        let valByteArray = Decoder().ValidateMessage(of: byteArray)
-        
+        let valByteArray = (config.uci ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
         if (valByteArray[0] != ProtocolConstants.cmdCodePosition)
         {
@@ -64,9 +65,6 @@ public class TraceletResponse {
         let siteID = siteIdRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return "0x\(String(rawPtr.load(as: UInt16.self).littleEndian, radix: 16))"})
-        // For siteID: Important to use UInt16 not Int16
-        // Check if correct
-        // Signature is available in tracelet?
         
         if (byteArray.count > 21) {
             signature = signatureRange.withUnsafeBytes({
@@ -80,9 +78,9 @@ public class TraceletResponse {
         let var1 = a + sqrt(a*a - b);
         let var2 = a - sqrt(a*a - b);
         let acc = sqrt(max(var1, var2)) / 10;
-
         
-        let response = TL_PositionResponse(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
+        
+        let response = TraceletPosition(xCoord: xCoord, yCoord: yCoord, zCoord: zCoord, covXx: covXx, covXy: covXy, covYy: covYy, siteID: siteID, signature: signature, accuracy: acc)
         return response
         
     }
@@ -92,11 +90,9 @@ public class TraceletResponse {
     //MARK: - Get Satus Response
     
     
-     func GetStatusResponse (from byteArray: Data) -> TL_StatusResponse {
+    func GetStatusResponse (from byteArray: Data) -> TraceletStatus {        
         
-        // Validate the message and remove start/endbyte
-        var valByteArray = Decoder().ValidateMessage(of: byteArray)
-        
+        var valByteArray = (config.uci  ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
         
         if (valByteArray[0] != ProtocolConstants.cmdCodeStatus)
         {
@@ -121,21 +117,22 @@ public class TraceletResponse {
         let batStateByteRange = valByteArray[18]
         let batLevelBytesRange = valByteArray[19]
         let txLateCntRange = Array(valByteArray[20...21])   // 2 Byte
-        let flagsByteRange = valByteArray[23]               // 1 Byte
-        
-        
+        let _ = valByteArray[23] // one byte, 23 fHndRange
+        let _ = valByteArray[24]   // one byte, 24 cHndRange
+        let flagsByteRange = Array(valByteArray[20...28]) // four bytes, 25, 26, 27, 28
+        let uwbChannelRange = valByteArray[29]  // one byte, 26
+        let preambleTxCodeRange = valByteArray[30]   // one byte, 27
+        let preambleRxCodeRange  = valByteArray[31]  // one byte, 28
         
         
         // Get Bytes from Range
-        
         let roleByte = Int8 (roleByteRange.littleEndian)
-         
-         let address = addressRange.withUnsafeBytes({
-             (rawPtr: UnsafeRawBufferPointer) in
-             return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
-         let siteID = "0x\(String(format: "%04X", littleEndianUInt16(from: siteIDRange)))"
-         let panID = "0x\(String(format: "%04X", littleEndianUInt16(from: panRange)))"
-
+        let address = addressRange.withUnsafeBytes({
+            (rawPtr: UnsafeRawBufferPointer) in
+            return "0x\(String(format: "%04X", rawPtr.load(as: UInt16.self).littleEndian))"})
+        let siteID = "0x\(String(format: "%04X", littleEndianUInt16(from: siteIDRange)))"
+        let panID = "0x\(String(format: "%04X", littleEndianUInt16(from: panRange)))"
+        
         let posX = posXRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
@@ -145,35 +142,47 @@ public class TraceletResponse {
         let posZ = posZRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
-        let stateByte = Int8 (stateByteRange.littleEndian)
-        let syncStateBytes = Int8 (syncStateBytesRange.littleEndian)
-        let syncSlot = Int16 (syncSlotRange.littleEndian)
-        let syncModeByte = Int8 (syncModeBytesRange.littleEndian)
-        let motionStateByte = Int8 (motionStateBytesRange.littleEndian)
+        let stateByte = UInt8 (stateByteRange.littleEndian)
+        let syncStateBytes = UInt8 (syncStateBytesRange.littleEndian)
+        let syncSlot = UInt8 (syncSlotRange.littleEndian)
+        let syncModeByte = UInt8 (syncModeBytesRange.littleEndian)
+        let motionStateByte = UInt8 (motionStateBytesRange.littleEndian)
         let batStateByte = UInt8 (batStateByteRange.littleEndian)
-        let batLevelBytes = UInt16 (batLevelBytesRange.littleEndian)
+        let batLevelBytes = UInt8 (batLevelBytesRange.littleEndian)
         let txLateCnt = txLateCntRange.withUnsafeBytes({
             (rawPtr: UnsafeRawBufferPointer) in
             return rawPtr.load(as: Int16.self).littleEndian })
-        let flagsByte = UInt8(flagsByteRange.littleEndian)
+        let flagsByte = flagsByteRange.withUnsafeBytes({
+            (rawPtr: UnsafeRawBufferPointer) in
+            return rawPtr.load(as: Int16.self).littleEndian })
+
+        let uwbChannel = UInt8(uwbChannelRange.littleEndian)
+        let preambleTxCode = UInt8(preambleTxCodeRange.littleEndian)
+        let preambleRxCode  = UInt8(preambleRxCodeRange.littleEndian)
         
         
-        let response = TL_StatusResponse(role: String(roleByte),
-                                         address: String(address),
-                                         siteIDe: String(siteID),
-                                         panID: String(panID),
-                                         posX: String(posX),
-                                         posY: String(posY),
-                                         posZ: String(posZ),
-                                         stateByte: String(stateByte),
-                                         syncStateByte: String(syncStateBytes),
-                                         syncSlot: String(syncSlot),
-                                         syncModeByte: String(syncModeByte),
-                                         motionStateByte: String(motionStateByte),
-                                         batteryState: String(batStateByte),
-                                         batteryLevel: String(batLevelBytes),
-                                         txLateCnt: String(txLateCnt),
-                                         flagsByte: String(flagsByte))
+        let response = TraceletStatus(role: String(roleByte),
+                                      address: address,
+                                      siteIDe: siteID,
+                                      panID: panID,
+                                      posX: posX,
+                                      posY: posY,
+                                      posZ: posZ,
+                                      stateByte: stateByte,
+                                      syncStateByte: syncStateBytes,
+                                      syncSlot: syncSlot,
+                                      syncModeByte: syncModeByte,
+                                      motionStateByte: motionStateByte,
+                                      batteryState: batStateByte,
+                                      batteryLevel: batLevelBytes,
+                                      txLateCnt: txLateCnt,
+                                      flagsByte: flagsByte,
+                                      uwbChannel:uwbChannel,
+                                      preambleRxCode:preambleRxCode,
+                                      preambleTxCode:preambleTxCode
+                                      
+        )
+        
         
         return response
         
@@ -181,21 +190,26 @@ public class TraceletResponse {
     func littleEndianUInt16(from bytes: Array<UInt8>) -> UInt16 {
         return UInt16(bytes[0]) | (UInt16(bytes[1]) << 8)
     }
-
     
     
     
     
-    public func getVersionResponse(from byteArray: Data) -> TL_VersionResponse {
+    public func getVersionResponse(from byteArray: Data) -> TraceletVersion {
         
-        let valByteArray = Decoder().ValidateMessage(of: byteArray)
+        let valByteArray = (config.uci  ? UCIDecoder().decode(data: byteArray) : Decoder().validateMessage(of: byteArray))
+        
         if (valByteArray[0] == ProtocolConstants.cmdCodeVersion) {
-            
-            let versionString = String(decoding: valByteArray, as: UTF8.self)
-            return TL_VersionResponse(version: versionString)
+            let startIndex = 1 // Skip the first byte
+            let versionData = Data(valByteArray[startIndex...])
+            if let versionString = String(data: versionData, encoding: .utf8) {
+                return TraceletVersion(version: versionString)
+            } else {
+                logger.log(type: .warning, "Failed to decode version string")
+                return TraceletVersion(version: "")
+            }
         } else {
             logger.log(type: .warning, "Received unknown response to version request")
-            return TL_VersionResponse(version: "")
+            return TraceletVersion(version: "unkown")
         }
         
     }
@@ -205,10 +219,9 @@ public class TraceletResponse {
 
 // Response Protocol conformance
 public protocol Response {
-    var postion:TL_PositionResponse { get }
-    var status: TL_StatusResponse { get }
-    var version: TL_VersionResponse { get }
-    // and whatever else is common to these classes
+    var postion:TraceletPosition { get }
+    var status: TraceletStatus { get }
+    var version: TraceletVersion { get }
 }
 
 

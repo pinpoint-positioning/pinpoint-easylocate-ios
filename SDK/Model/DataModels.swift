@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import Combine
 
 
-// Positin Model
-public struct TL_PositionResponse:Equatable {
+public struct TraceletPosition:Equatable {
     
     public var xCoord = Double()
     public var yCoord = Double()
@@ -25,44 +23,29 @@ public struct TL_PositionResponse:Equatable {
 }
 
 
-public struct TL_StatusResponse {
-    
-    public var role:String
-    public var address : String
-    public var siteIDe : String
-    public var panID :String
-    public var posX : String
-    public var posY : String
-    public var posZ : String
-    public var stateByte : String
-    public var syncStateByte : String
-    public var syncSlot : String
-    public var syncModeByte : String
-    public var motionStateByte :String
-    public var batteryState : String
-    public var batteryLevel : String
-    public var txLateCnt : String
-    public var flagsByte : String
-    
-    
-    public init(role:String = "",
-                address : String = "",
-                siteIDe:String = "",
-                panID: String = "",
-                posX:String = "",
-                posY: String = "",
-                posZ : String = "",
-                stateByte : String = "",
-                syncStateByte : String = "",
-                syncSlot : String = "",
-                syncModeByte : String = "",
-                motionStateByte : String = "",
-                batteryState :String = "",
-                batteryLevel :String = "",
-                txLateCnt : String = "",
-                flagsByte :String = "")
-    
-    {
+public struct TraceletStatus {
+    public var role: String
+    public var address: String
+    public var siteIDe: String
+    public var panID: String
+    public var posX: Int16
+    public var posY: Int16
+    public var posZ: Int16
+    public var stateByte: UInt8
+    public var syncStateByte: UInt8
+    public var syncSlot: UInt8
+    public var syncModeByte: UInt8
+    public var motionStateByte: UInt8
+    public var batteryState: UInt8
+    public var batteryLevel: UInt8
+    public var txLateCnt: Int16
+    public var flagsByte: Int16
+    public var uwbChannel: UInt8
+    public var preambleRxCode: UInt8
+    public var preambleTxCode: UInt8
+
+
+    public init(role: String = "", address: String = "", siteIDe: String = "", panID: String = "", posX: Int16 = 0, posY: Int16 = 0, posZ: Int16 = 0, stateByte: UInt8 = 0, syncStateByte: UInt8 = 0, syncSlot: UInt8 = 0, syncModeByte: UInt8 = 0, motionStateByte: UInt8 = 0, batteryState: UInt8 = 0, batteryLevel: UInt8 = 0, txLateCnt: Int16 = 0, flagsByte: Int16 = 0, uwbChannel: UInt8 = 0, preambleRxCode: UInt8 = 0, preambleTxCode: UInt8 = 0) {
         self.role = role
         self.address = address
         self.siteIDe = siteIDe
@@ -79,11 +62,15 @@ public struct TL_StatusResponse {
         self.batteryLevel = batteryLevel
         self.txLateCnt = txLateCnt
         self.flagsByte = flagsByte
+        self.uwbChannel = uwbChannel
+        self.preambleRxCode = preambleRxCode
+        self.preambleTxCode = preambleTxCode
     }
-    
 }
 
-public struct TL_VersionResponse {
+
+
+public struct TraceletVersion {
     
     public var version = String()
 }
@@ -97,9 +84,6 @@ public struct BufferElement
 }
 
 
-
-
-
 public struct SiteData: Codable, Equatable {
 
     
@@ -108,13 +92,14 @@ public struct SiteData: Codable, Equatable {
     public var sitefileScheme = SitefileScheme()
     
     public init() {
-        // Initialize your properties here
         self.map = Map()
         self.satlets = []
         self.sitefileScheme = SitefileScheme()
     }
 
     public struct Map: Codable, Equatable {
+        public var configName = ""
+        public var levelName = ""
         public var mapFile = ""
         public var mapFileOriginX = 0.0
         public var mapFileOriginY = 0.0
@@ -124,8 +109,8 @@ public struct SiteData: Codable, Equatable {
         public var originLatitude:Double?
         public var originLongitude:Double?
         public var originAzimuth:Double?
-        public var uwbChannel = 0
-        
+        public var uwbChannel:Int?
+        public var uwbPreambleIndex:Int?
 
     }
 
@@ -143,15 +128,56 @@ public struct SiteData: Codable, Equatable {
     public struct SitefileScheme: Codable, Equatable {
         public var version = 0.0
     }
-    
-    
-    
-    
-    
- 
+   
+}
 
-    
-    
-    
+public enum ConnectionSource {
+    case regularConnect
+    case connectAndStartPositioning
+}
+
+public protocol ConnectionDelegate: AnyObject {
+    func connectionDidSucceed()
+    func connectionDidFail()
+}
+
+enum UCIDecoderState {
+    case initial, running
+}
+
+public enum LogType {
+   case info
+   case warning
+   case error
+   
+}
+
+public enum ConnectionError: Error {
+    case alreadyConnected
+    case configurationFailed
+    case unknownConnectionSource
+    case characteristicsNotFound
+    case peripheralError(Error)
+}
+
+
+
+
+public struct SiteFile: Codable {
+    public var map: Map
+
+}
+
+public struct Map:Codable {
+    public var mapFile: String
+    public var mapFileOriginX:Double
+    public var mapFileOriginY: Double
+    public var mapFileRes: Double
+    public var mapName: String
+    public var mapSiteId:String
+    public var originLatitude: Double
+    public var originLongitude: Double
+    public var originAzimuth:Double
+    public var uwbChannel: Int
 }
 
